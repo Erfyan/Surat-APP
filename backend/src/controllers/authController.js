@@ -141,7 +141,23 @@ const login = async (req, res) => {
   }
 };
 
+/**
+ * Controller: Get Current User Profile (Protected)
+ * GET /api/auth/me
+ */
+const getMe = async (req, res) => {
+  // req.user sudah di-set oleh authMiddleware (verifyToken)
+  return res.status(200).json({
+    success: true,
+    message: 'Berhasil mengambil profil pengguna',
+    data: {
+      user: req.user
+    }
+  });
+};
+
 module.exports = {
   register,
-  login
+  login,
+  getMe
 };
