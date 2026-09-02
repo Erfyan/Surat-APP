@@ -2,14 +2,34 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import SuratMasukList from './pages/SuratMasuk/SuratMasukList';
+import SuratMasukForm from './pages/SuratMasuk/SuratMasukForm';
+import SuratMasukDetail from './pages/SuratMasuk/SuratMasukDetail';
+
+// Guard: redirect ke /login jika belum terautentikasi
+function PrivateRoute({ children }) {
+  const token = localStorage.getItem('access_token');
+  return token ? children : <Navigate to="/login" replace />;
+}
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Dashboard />} />
+
+        {/* Protected Routes */}
+        <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+
+        {/* Surat Masuk */}
+        <Route path="/surat-masuk" element={<PrivateRoute><SuratMasukList /></PrivateRoute>} />
+        <Route path="/surat-masuk/tambah" element={<PrivateRoute><SuratMasukForm /></PrivateRoute>} />
+        <Route path="/surat-masuk/:id" element={<PrivateRoute><SuratMasukDetail /></PrivateRoute>} />
+        <Route path="/surat-masuk/:id/edit" element={<PrivateRoute><SuratMasukForm /></PrivateRoute>} />
+
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
