@@ -156,8 +156,37 @@ const getMe = async (req, res) => {
   });
 };
 
+/**
+ * Controller: Get All Users / Profiles (Protected)
+ * GET /api/auth/users
+ */
+const getUsers = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, role, jabatan')
+      .order('full_name', { ascending: true });
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Berhasil mengambil daftar pengguna',
+      data,
+    });
+  } catch (error) {
+    console.error('[GET_USERS_ERROR]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan saat mengambil daftar pengguna',
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
-  getMe
+  getMe,
+  getUsers,
 };
+

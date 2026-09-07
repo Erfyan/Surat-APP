@@ -5,6 +5,8 @@ import Dashboard from './pages/Dashboard';
 import SuratMasukList from './pages/SuratMasuk/SuratMasukList';
 import SuratMasukForm from './pages/SuratMasuk/SuratMasukForm';
 import SuratMasukDetail from './pages/SuratMasuk/SuratMasukDetail';
+import DisposisiList from './pages/Disposisi/DisposisiList';
+import DisposisiForm from './pages/Disposisi/DisposisiForm';
 
 // Guard: redirect ke /login jika belum terautentikasi
 function PrivateRoute({ children }) {
@@ -29,11 +31,17 @@ function App() {
         <Route path="/surat-masuk/:id" element={<PrivateRoute><SuratMasukDetail /></PrivateRoute>} />
         <Route path="/surat-masuk/:id/edit" element={<PrivateRoute><SuratMasukForm /></PrivateRoute>} />
 
+        {/* Disposisi */}
+        <Route path="/disposisi" element={<PrivateRoute><DisposisiList /></PrivateRoute>} />
+        <Route path="/disposisi/tambah" element={<PrivateRoute><DisposisiForm /></PrivateRoute>} />
+        <Route path="/disposisi/:id/edit" element={<PrivateRoute><DisposisiForm /></PrivateRoute>} />
+
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
 }
+
 
 export default App;

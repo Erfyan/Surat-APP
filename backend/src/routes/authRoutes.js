@@ -12,4 +12,8 @@ router.post('/login', authController.login);
 // GET /api/auth/me - Dapatkan data profile user yang sedang login (Protected)
 router.get('/me', verifyToken, authController.getMe);
 
+// GET /api/auth/users - Dapatkan daftar pengguna (Protected)
+router.get('/users', verifyToken, authController.getUsers);
+
 module.exports = router;
+

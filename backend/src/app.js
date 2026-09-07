@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const suratMasukRoutes = require('./routes/suratMasukRoutes');
+const disposisiRoutes = require('./routes/disposisiRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routing API
 app.use('/api/auth', authRoutes);
 app.use('/api/surat-masuk', suratMasukRoutes);
+app.use('/api/disposisi', disposisiRoutes);
+
 
 // Root / Health-check Endpoint
 app.get('/', (req, res) => {

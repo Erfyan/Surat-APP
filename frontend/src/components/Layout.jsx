@@ -25,8 +25,10 @@ export default function Layout({ children, title }) {
         <nav style={styles.nav}>
           <Link to="/" style={styles.navItem}>🏠 Dashboard</Link>
           <Link to="/surat-masuk" style={styles.navItem}>📥 Surat Masuk</Link>
+          <Link to="/disposisi" style={styles.navItem}>📋 Disposisi</Link>
           <Link to="/surat-keluar" style={styles.navItem}>📤 Surat Keluar</Link>
         </nav>
+
 
         <div style={styles.userSection}>
           <div style={styles.userInfo}>

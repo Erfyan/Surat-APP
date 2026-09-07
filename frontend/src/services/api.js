@@ -54,3 +54,71 @@ export const deleteSuratMasuk = async (id) => {
   });
   return res.json();
 };
+
+// ─── Users / Profiles ─────────────────────────────────────────────────────────
+
+export const getUsers = async () => {
+  const res = await fetch(`${API_URL}/api/auth/users`, {
+    headers: getHeaders(),
+  });
+  return res.json();
+};
+
+// ─── Disposisi ────────────────────────────────────────────────────────────────
+
+export const getDisposisi = async (suratMasukId = null) => {
+  const url = suratMasukId
+    ? `${API_URL}/api/disposisi?surat_masuk_id=${suratMasukId}`
+    : `${API_URL}/api/disposisi`;
+  const res = await fetch(url, {
+    headers: getHeaders(),
+  });
+  return res.json();
+};
+
+export const getDisposisiBySuratId = async (suratMasukId) => {
+  const res = await fetch(`${API_URL}/api/disposisi/surat/${suratMasukId}`, {
+    headers: getHeaders(),
+  });
+  return res.json();
+};
+
+export const getDisposisiById = async (id) => {
+  const res = await fetch(`${API_URL}/api/disposisi/${id}`, {
+    headers: getHeaders(),
+  });
+  return res.json();
+};
+
+export const createDisposisi = async (disposisiData) => {
+  const res = await fetch(`${API_URL}/api/disposisi`, {
+    method: 'POST',
+    headers: {
+      ...getHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(disposisiData),
+  });
+  return res.json();
+};
+
+export const updateDisposisi = async (id, disposisiData) => {
+  const res = await fetch(`${API_URL}/api/disposisi/${id}`, {
+    method: 'PUT',
+    headers: {
+      ...getHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(disposisiData),
+  });
+  return res.json();
+};
+
+export const deleteDisposisi = async (id) => {
+  const res = await fetch(`${API_URL}/api/disposisi/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return res.json();
+};
+
