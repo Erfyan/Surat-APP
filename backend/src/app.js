@@ -40,9 +40,21 @@ app.use((req, res) => {
   });
 });
 
-// Jalankan Server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Centralized Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error('[GLOBAL_ERROR_HANDLER]:', err);
+  const statusCode = err.status || err.statusCode || 500;
+  res.status(statusCode).json({
+    success: false,
+    message: err.message || 'Terjadi kesalahan pada server'
+  });
 });
+
+// Jalankan Server hanya jika dijalankan langsung (bukan saat diimport oleh test suite)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 module.exports = app;

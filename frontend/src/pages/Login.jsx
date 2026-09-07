@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { loginUser } from '../services/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -14,19 +15,10 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${apiUrl}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await loginUser(email, password);
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Login gagal');
+      if (!data.success) {
+        throw new Error(data.message || 'Email atau password salah');
       }
 
       // Simpan token & user info ke localStorage
@@ -36,7 +28,7 @@ export default function Login() {
       }
       localStorage.setItem('user', JSON.stringify(data.data.user));
 
-      // Redirect ke dashboard (akan dibuat nanti)
+      // Redirect ke dashboard
       navigate('/');
     } catch (err) {
       setError(err.message);
