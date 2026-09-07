@@ -7,6 +7,9 @@ import SuratMasukForm from './pages/SuratMasuk/SuratMasukForm';
 import SuratMasukDetail from './pages/SuratMasuk/SuratMasukDetail';
 import DisposisiList from './pages/Disposisi/DisposisiList';
 import DisposisiForm from './pages/Disposisi/DisposisiForm';
+import SuratKeluarList from './pages/SuratKeluar/SuratKeluarList';
+import SuratKeluarForm from './pages/SuratKeluar/SuratKeluarForm';
+import SuratKeluarDetail from './pages/SuratKeluar/SuratKeluarDetail';
 
 // Guard: redirect ke /login jika belum terautentikasi
 function PrivateRoute({ children }) {
@@ -35,6 +38,12 @@ function App() {
         <Route path="/disposisi" element={<PrivateRoute><DisposisiList /></PrivateRoute>} />
         <Route path="/disposisi/tambah" element={<PrivateRoute><DisposisiForm /></PrivateRoute>} />
         <Route path="/disposisi/:id/edit" element={<PrivateRoute><DisposisiForm /></PrivateRoute>} />
+
+        {/* Surat Keluar */}
+        <Route path="/surat-keluar" element={<PrivateRoute><SuratKeluarList /></PrivateRoute>} />
+        <Route path="/surat-keluar/tambah" element={<PrivateRoute><SuratKeluarForm /></PrivateRoute>} />
+        <Route path="/surat-keluar/:id" element={<PrivateRoute><SuratKeluarDetail /></PrivateRoute>} />
+        <Route path="/surat-keluar/:id/edit" element={<PrivateRoute><SuratKeluarForm /></PrivateRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

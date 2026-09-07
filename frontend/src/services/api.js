@@ -122,3 +122,61 @@ export const deleteDisposisi = async (id) => {
   return res.json();
 };
 
+// ─── Surat Keluar ─────────────────────────────────────────────────────────────
+
+export const getSuratKeluar = async (status = null) => {
+  const url = status
+    ? `${API_URL}/api/surat-keluar?status=${encodeURIComponent(status)}`
+    : `${API_URL}/api/surat-keluar`;
+  const res = await fetch(url, {
+    headers: getHeaders(),
+  });
+  return res.json();
+};
+
+export const getSuratKeluarById = async (id) => {
+  const res = await fetch(`${API_URL}/api/surat-keluar/${id}`, {
+    headers: getHeaders(),
+  });
+  return res.json();
+};
+
+export const createSuratKeluar = async (formData) => {
+  const res = await fetch(`${API_URL}/api/surat-keluar`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: formData,
+  });
+  return res.json();
+};
+
+export const updateSuratKeluar = async (id, formData) => {
+  const res = await fetch(`${API_URL}/api/surat-keluar/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: formData,
+  });
+  return res.json();
+};
+
+export const approveSuratKeluar = async (id, status_approval, catatan_approval) => {
+  const res = await fetch(`${API_URL}/api/surat-keluar/${id}/approval`, {
+    method: 'PUT',
+    headers: {
+      ...getHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status_approval, catatan_approval }),
+  });
+  return res.json();
+};
+
+export const deleteSuratKeluar = async (id) => {
+  const res = await fetch(`${API_URL}/api/surat-keluar/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return res.json();
+};
+
+
