@@ -27,6 +27,7 @@ export default function Layout({ children, title }) {
           <Link to="/surat-masuk" style={styles.navItem}>📥 Surat Masuk</Link>
           <Link to="/disposisi" style={styles.navItem}>📋 Disposisi</Link>
           <Link to="/surat-keluar" style={styles.navItem}>📤 Surat Keluar</Link>
+          <Link to="/arsip" style={styles.navItem}>📁 Arsip & Laporan</Link>
         </nav>
 
 

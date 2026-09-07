@@ -10,7 +10,7 @@ const BUCKET_NAME = 'surat_keluar_files';
  */
 const getAll = async (req, res) => {
   try {
-    const { status, search } = req.query;
+    const { status, search, startDate, endDate } = req.query;
 
     let query = supabase
       .from('surat_keluar')
@@ -23,6 +23,12 @@ const getAll = async (req, res) => {
 
     if (status) {
       query = query.eq('status_approval', status);
+    }
+    if (startDate) {
+      query = query.gte('tanggal_surat', startDate);
+    }
+    if (endDate) {
+      query = query.lte('tanggal_surat', endDate);
     }
 
     const { data, error } = await query;

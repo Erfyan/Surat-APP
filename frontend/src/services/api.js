@@ -14,8 +14,10 @@ const getHeaders = () => {
 
 // ─── Surat Masuk ──────────────────────────────────────────────────────────────
 
-export const getSuratMasuk = async () => {
-  const res = await fetch(`${API_URL}/api/surat-masuk`, {
+export const getSuratMasuk = async (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const url = query ? `${API_URL}/api/surat-masuk?${query}` : `${API_URL}/api/surat-masuk`;
+  const res = await fetch(url, {
     headers: getHeaders(),
   });
   return res.json();
@@ -178,5 +180,26 @@ export const deleteSuratKeluar = async (id) => {
   });
   return res.json();
 };
+
+// ─── Arsip & Laporan ─────────────────────────────────────────────────────────
+
+export const getArsip = async (params = {}) => {
+  // filtering out empty strings/nulls
+  const cleanParams = {};
+  Object.keys(params).forEach((key) => {
+    if (params[key] !== '' && params[key] !== null && params[key] !== undefined) {
+      cleanParams[key] = params[key];
+    }
+  });
+
+  const query = new URLSearchParams(cleanParams).toString();
+  const url = query ? `${API_URL}/api/arsip?${query}` : `${API_URL}/api/arsip`;
+
+  const res = await fetch(url, {
+    headers: getHeaders(),
+  });
+  return res.json();
+};
+
 
 

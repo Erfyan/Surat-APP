@@ -7,6 +7,8 @@ export default function SuratMasukList() {
   const [suratList, setSuratList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -14,7 +16,7 @@ export default function SuratMasukList() {
     setLoading(true);
     setError('');
     try {
-      const res = await getSuratMasuk();
+      const res = await getSuratMasuk({ search, startDate, endDate });
       if (!res.success) throw new Error(res.message);
       setSuratList(res.data || []);
     } catch (err) {
@@ -26,7 +28,12 @@ export default function SuratMasukList() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [startDate, endDate]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    fetchData();
+  };
 
   const handleDelete = async (id, nomor) => {
     if (!confirm(`Hapus surat "${nomor}"?`)) return;
@@ -39,13 +46,6 @@ export default function SuratMasukList() {
     }
   };
 
-  const filtered = suratList.filter(
-    (s) =>
-      s.nomor_surat?.toLowerCase().includes(search.toLowerCase()) ||
-      s.asal_surat?.toLowerCase().includes(search.toLowerCase()) ||
-      s.perihal?.toLowerCase().includes(search.toLowerCase())
-  );
-
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('id-ID', {
@@ -56,18 +56,47 @@ export default function SuratMasukList() {
   return (
     <Layout title="Surat Masuk">
       {/* Toolbar */}
-      <div style={styles.toolbar}>
+      <form onSubmit={handleSearchSubmit} style={styles.toolbar}>
         <input
           type="text"
-          placeholder="🔍  Cari nomor, asal, atau perihal..."
+          placeholder="🔍 Cari nomor, asal, perihal..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={styles.searchInput}
         />
-        <button onClick={() => navigate('/surat-masuk/tambah')} style={styles.addBtn}>
+        <input
+          type="date"
+          title="Dari Tanggal"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          style={styles.dateInput}
+        />
+        <input
+          type="date"
+          title="Sampai Tanggal"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          style={styles.dateInput}
+        />
+        <button type="submit" style={styles.searchBtn}>
+          Cari
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSearch('');
+            setStartDate('');
+            setEndDate('');
+            setTimeout(fetchData, 50);
+          }}
+          style={styles.resetBtn}
+        >
+          Reset
+        </button>
+        <button type="button" onClick={() => navigate('/surat-masuk/tambah')} style={styles.addBtn}>
           + Tambah Surat
         </button>
-      </div>
+      </form>
 
       {/* Error */}
       {error && <div style={styles.alertError}>{error}</div>}
@@ -75,9 +104,9 @@ export default function SuratMasukList() {
       {/* Loading */}
       {loading ? (
         <div style={styles.empty}>Memuat data…</div>
-      ) : filtered.length === 0 ? (
+      ) : suratList.length === 0 ? (
         <div style={styles.empty}>
-          {search ? 'Tidak ada surat yang cocok dengan pencarian.' : 'Belum ada data surat masuk.'}
+          {search || startDate || endDate ? 'Tidak ada surat yang cocok dengan kriteria pencarian.' : 'Belum ada data surat masuk.'}
         </div>
       ) : (
         /* Table */
@@ -95,7 +124,7 @@ export default function SuratMasukList() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((surat, i) => (
+              {suratList.map((surat, i) => (
                 <tr key={surat.id} style={i % 2 === 0 ? styles.trEven : styles.trOdd}>
                   <td style={styles.td}>{i + 1}</td>
                   <td style={{ ...styles.td, fontWeight: '600', color: '#1e293b' }}>
@@ -142,13 +171,13 @@ export default function SuratMasukList() {
 const styles = {
   toolbar: {
     display: 'flex',
-    gap: '1rem',
+    gap: '0.75rem',
     alignItems: 'center',
     marginBottom: '1.5rem',
     flexWrap: 'wrap',
   },
   searchInput: {
-    flex: 1,
+    flex: 2,
     minWidth: '200px',
     padding: '0.65rem 1rem',
     border: '1px solid #e2e8f0',
@@ -156,6 +185,34 @@ const styles = {
     fontSize: '0.9rem',
     backgroundColor: '#fff',
     outline: 'none',
+  },
+  dateInput: {
+    padding: '0.6rem 0.8rem',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '0.85rem',
+    backgroundColor: '#fff',
+    outline: 'none',
+  },
+  searchBtn: {
+    padding: '0.65rem 1.1rem',
+    backgroundColor: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '0.875rem',
+  },
+  resetBtn: {
+    padding: '0.65rem 1rem',
+    backgroundColor: '#94a3b8',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '0.875rem',
   },
   addBtn: {
     padding: '0.65rem 1.25rem',
@@ -167,6 +224,7 @@ const styles = {
     fontWeight: '600',
     fontSize: '0.9rem',
     whiteSpace: 'nowrap',
+    marginLeft: 'auto',
   },
   alertError: {
     backgroundColor: '#fee2e2',

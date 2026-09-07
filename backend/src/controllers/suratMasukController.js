@@ -9,7 +9,9 @@ const BUCKET_NAME = 'surat_masuk_files';
  */
 const getAll = async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { search, startDate, endDate } = req.query;
+
+    let query = supabase
       .from('surat_masuk')
       .select(`
         *,
@@ -17,12 +19,33 @@ const getAll = async (req, res) => {
       `)
       .order('created_at', { ascending: false });
 
+    if (startDate) {
+      query = query.gte('tanggal_surat', startDate);
+    }
+    if (endDate) {
+      query = query.lte('tanggal_surat', endDate);
+    }
+
+    const { data, error } = await query;
+
     if (error) throw error;
+
+    let result = data || [];
+
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (s) =>
+          s.nomor_surat?.toLowerCase().includes(q) ||
+          s.asal_surat?.toLowerCase().includes(q) ||
+          s.perihal?.toLowerCase().includes(q)
+      );
+    }
 
     return res.status(200).json({
       success: true,
       message: 'Berhasil mengambil data surat masuk',
-      data,
+      data: result,
     });
   } catch (error) {
     console.error('[GET_ALL_SURAT_MASUK_ERROR]:', error);

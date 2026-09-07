@@ -10,6 +10,7 @@ import DisposisiForm from './pages/Disposisi/DisposisiForm';
 import SuratKeluarList from './pages/SuratKeluar/SuratKeluarList';
 import SuratKeluarForm from './pages/SuratKeluar/SuratKeluarForm';
 import SuratKeluarDetail from './pages/SuratKeluar/SuratKeluarDetail';
+import ArsipList from './pages/Arsip/ArsipList';
 
 // Guard: redirect ke /login jika belum terautentikasi
 function PrivateRoute({ children }) {
@@ -44,6 +45,9 @@ function App() {
         <Route path="/surat-keluar/tambah" element={<PrivateRoute><SuratKeluarForm /></PrivateRoute>} />
         <Route path="/surat-keluar/:id" element={<PrivateRoute><SuratKeluarDetail /></PrivateRoute>} />
         <Route path="/surat-keluar/:id/edit" element={<PrivateRoute><SuratKeluarForm /></PrivateRoute>} />
+
+        {/* Arsip & Laporan */}
+        <Route path="/arsip" element={<PrivateRoute><ArsipList /></PrivateRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
