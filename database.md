@@ -5,8 +5,8 @@ anon_public_key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 Selesai:
 - Backend & Frontend: Disposisi Surat Masuk ✓
+- Backend: CRUD Surat Keluar + Approval ✓
 
 langkah selanjutnya 
-Backend: CRUD Surat Keluar + approval ↓
 Frontend: Surat Keluar + Dashboard ↓
 Finishing: Arsip, pencarian, filter
