@@ -114,13 +114,6 @@ export default function Layout({ children, title }) {
               <i className="fa-solid fa-right-from-bracket" />
             </button>
           </div>
-
-          {/* Desktop: quick link to settings */}
-          <div className="desktop-header-actions">
-            <NavLink to="/pengaturan" className="btn btn-ghost btn-sm" style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.825rem' }}>
-              <i className="fa-solid fa-gear" /> Pengaturan
-            </NavLink>
-          </div>
         </header>
 
         {/* Content Body */}
