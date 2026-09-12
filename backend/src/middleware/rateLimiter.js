@@ -7,14 +7,19 @@
 const requestCache = new Map();
 
 // Periodic cleanup setiap 5 menit agar memori tetap bersih
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, timestamp] of requestCache.entries()) {
-    if (now - timestamp > 60000) {
-      requestCache.delete(key);
+if (process.env.NODE_ENV !== 'test') {
+  const cleanupTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [key, timestamp] of requestCache.entries()) {
+      if (now - timestamp > 60000) {
+        requestCache.delete(key);
+      }
     }
+  }, 300000);
+  if (cleanupTimer.unref) {
+    cleanupTimer.unref();
   }
-}, 300000);
+}
 
 /**
  * Middleware: Anti-Spam / Anti-Duplicate Request
