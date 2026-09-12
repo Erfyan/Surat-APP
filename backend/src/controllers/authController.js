@@ -183,10 +183,53 @@ const getUsers = async (req, res) => {
   }
 };
 
+/**
+ * Controller: Refresh JWT Session Token
+ * POST /api/auth/refresh
+ */
+const refreshTokenController = async (req, res) => {
+  try {
+    const { refresh_token } = req.body;
+    if (!refresh_token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Refresh token wajib diisi',
+      });
+    }
+
+    const { data: sessionData, error: sessionError } = await supabase.auth.refreshSession({
+      refresh_token,
+    });
+
+    if (sessionError || !sessionData?.session) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token tidak valid atau expired',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Token berhasil diperbarui',
+      data: {
+        access_token: sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token,
+      },
+    });
+  } catch (error) {
+    console.error('[AUTH_REFRESH_EXCEPTION]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan saat memperbarui token',
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   getUsers,
+  refreshTokenController,
 };
 

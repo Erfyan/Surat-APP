@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { getSuratKeluarById, createSuratKeluar, updateSuratKeluar } from '../../services/api';
 
 export default function SuratKeluarForm() {
@@ -95,127 +96,132 @@ export default function SuratKeluarForm() {
   if (fetching) {
     return (
       <Layout title={title}>
-        <div style={styles.center}>Memuat data formulir…</div>
+        <div className="glass-card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+          <i className="fa-solid fa-spinner fa-spin" /> Memuat data formulir...
+        </div>
       </Layout>
     );
   }
 
   return (
     <Layout title={title}>
-      <div style={styles.card}>
-        <div style={styles.topBar}>
-          <Link to="/surat-keluar" style={styles.backLink}>
+      <div className="glass-card animate-fade-in" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.75rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }} className="title-gradient">
+            <i className="fa-solid fa-paper-plane" style={{ color: 'var(--success)' }} /> {title}
+          </h3>
+          <Link to="/surat-keluar" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }}>
             ← Kembali ke Daftar
           </Link>
         </div>
 
-        {error && <div style={styles.alertError}>{error}</div>}
+        {error && (
+          <div className="badge badge-danger" style={{ width: '100%', padding: '0.875rem 1.25rem', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+            <i className="fa-solid fa-triangle-exclamation" /> {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.grid}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
             {/* Nomor Surat */}
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Nomor Surat</label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Nomor Surat (Opsional)</label>
               <input
                 name="nomor_surat"
                 value={form.nomor_surat}
                 onChange={handleChange}
-                placeholder="Contoh: 001/SK/IX/2026 (opsional, bisa diisi setelah disetujui)"
-                style={styles.input}
+                placeholder="Contoh: 001/SK/IX/2026"
+                className="input-field"
               />
             </div>
 
             {/* Tanggal Surat */}
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>
-                Tanggal Surat <span style={styles.required}>*</span>
-              </label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Tanggal Surat <span style={{ color: 'var(--danger)' }}>*</span></label>
               <input
                 type="date"
                 name="tanggal_surat"
                 value={form.tanggal_surat}
                 onChange={handleChange}
-                style={styles.input}
+                className="input-field"
                 required
               />
             </div>
           </div>
 
           {/* Tujuan Surat */}
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>
-              Tujuan Surat <span style={styles.required}>*</span>
-            </label>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">Tujuan Surat <span style={{ color: 'var(--danger)' }}>*</span></label>
             <input
               name="tujuan_surat"
               value={form.tujuan_surat}
               onChange={handleChange}
               placeholder="Contoh: Dinas Pendidikan Kota Makassar"
-              style={styles.input}
+              className="input-field"
               required
             />
           </div>
 
           {/* Perihal */}
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>
-              Perihal <span style={styles.required}>*</span>
-            </label>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">Perihal <span style={{ color: 'var(--danger)' }}>*</span></label>
             <textarea
               name="perihal"
               value={form.perihal}
               onChange={handleChange}
               placeholder="Perihal surat keluar..."
               rows={3}
-              style={{ ...styles.input, resize: 'vertical', fontFamily: 'inherit' }}
+              className="input-field"
+              style={{ resize: 'vertical' }}
               required
             />
           </div>
 
           {/* Isi Ringkas */}
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Ringkasan Isi (Opsional)</label>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">Ringkasan Isi (Opsional)</label>
             <textarea
               name="isi_ringkas"
               value={form.isi_ringkas}
               onChange={handleChange}
               placeholder="Ringkasan singkat isi surat..."
               rows={2}
-              style={{ ...styles.input, resize: 'vertical', fontFamily: 'inherit' }}
+              className="input-field"
+              style={{ resize: 'vertical' }}
             />
           </div>
 
           {/* Lampiran File */}
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Lampiran File</label>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">
+              <i className="fa-solid fa-paperclip" /> Lampiran File Dokumen
+            </label>
             {isEdit && existingFileUrl && (
-              <div style={styles.existingFile}>
-                📎 File saat ini:{' '}
-                <a href={existingFileUrl} target="_blank" rel="noreferrer" style={styles.fileLink}>
-                  Lihat Lampiran
-                </a>
+              <div className="badge badge-info" style={{ marginBottom: '0.5rem', width: 'fit-content' }}>
+                <i className="fa-solid fa-paperclip" /> File saat ini: <a href={existingFileUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>Lihat Lampiran</a>
               </div>
             )}
             <input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png,.docx"
               onChange={handleFileChange}
-              style={styles.fileInput}
+              className="input-field"
+              style={{ padding: '0.5rem' }}
             />
-            <p style={styles.hint}>Format: PDF, JPG, PNG, DOCX — Maksimal 5MB</p>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '4px' }}>Format: PDF, JPG, PNG, DOCX — Maksimal 5MB</span>
           </div>
 
           {/* Actions */}
-          <div style={styles.actions}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.875rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-light)' }}>
             <button
               type="button"
               onClick={() => navigate('/surat-keluar')}
-              style={styles.cancelBtn}
+              className="btn btn-secondary"
             >
               Batal
             </button>
-            <button type="submit" disabled={loading} style={styles.submitBtn}>
-              {loading ? 'Menyimpan…' : isEdit ? '💾 Simpan Perubahan' : '💾 Simpan Draft'}
+            <button type="submit" disabled={loading} className="btn btn-success">
+              {loading ? <><LoadingSpinner variant="button" /> Menyimpan...</> : <><i className="fa-solid fa-floppy-disk" /> {isEdit ? 'Simpan Perubahan' : 'Simpan Draft'}</>}
             </button>
           </div>
         </form>
@@ -223,110 +229,3 @@ export default function SuratKeluarForm() {
     </Layout>
   );
 }
-
-const styles = {
-  center: { textAlign: 'center', padding: '3rem', color: '#94a3b8' },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    padding: '2rem',
-    maxWidth: '780px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
-  },
-  topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  backLink: {
-    color: '#2563eb',
-    textDecoration: 'none',
-    fontSize: '0.875rem',
-    fontWeight: '500',
-  },
-  alertError: {
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    fontSize: '0.875rem',
-  },
-  form: { display: 'flex', flexDirection: 'column', gap: '1.25rem' },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '1.25rem',
-  },
-  fieldGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: {
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    color: '#374151',
-  },
-  required: { color: '#ef4444' },
-  input: {
-    padding: '0.65rem 0.9rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    color: '#1f2937',
-    outline: 'none',
-    backgroundColor: '#fff',
-    width: '100%',
-    boxSizing: 'border-box',
-  },
-  fileInput: {
-    padding: '0.5rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    fontSize: '0.875rem',
-    backgroundColor: '#f9fafb',
-    cursor: 'pointer',
-  },
-  existingFile: {
-    fontSize: '0.8rem',
-    color: '#475569',
-    backgroundColor: '#f8fafc',
-    padding: '6px 10px',
-    borderRadius: '6px',
-    border: '1px solid #e2e8f0',
-  },
-  fileLink: {
-    color: '#2563eb',
-    textDecoration: 'none',
-    fontWeight: '500',
-  },
-  hint: {
-    fontSize: '0.75rem',
-    color: '#94a3b8',
-    margin: '2px 0 0',
-  },
-  actions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.75rem',
-    marginTop: '0.5rem',
-    paddingTop: '1rem',
-    borderTop: '1px solid #f1f5f9',
-  },
-  cancelBtn: {
-    padding: '0.65rem 1.25rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    backgroundColor: '#fff',
-    color: '#475569',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-    fontWeight: '500',
-  },
-  submitBtn: {
-    padding: '0.65rem 1.5rem',
-    backgroundColor: '#059669',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-  },
-};

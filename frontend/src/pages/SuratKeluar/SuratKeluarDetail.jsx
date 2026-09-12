@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { getSuratKeluarById, deleteSuratKeluar, approveSuratKeluar } from '../../services/api';
 
 export default function SuratKeluarDetail() {
@@ -12,7 +13,7 @@ export default function SuratKeluarDetail() {
 
   // Approval modal state
   const [showApprovalPanel, setShowApprovalPanel] = useState(false);
-  const [approvalAction, setApprovalAction] = useState(''); // 'Disetujui' or 'Ditolak'
+  const [approvalAction, setApprovalAction] = useState('');
   const [catatanApproval, setCatatanApproval] = useState('');
   const [approving, setApproving] = useState(false);
 
@@ -85,72 +86,78 @@ export default function SuratKeluarDetail() {
 
   const getApprovalBadge = (status) => {
     const st = (status || '').toLowerCase();
-    if (st === 'disetujui')
-      return <span style={{ ...styles.badge, ...styles.badgeApproved }}>✓ Disetujui</span>;
-    if (st === 'ditolak')
-      return <span style={{ ...styles.badge, ...styles.badgeRejected }}>✖ Ditolak</span>;
-    return <span style={{ ...styles.badge, ...styles.badgePending }}>⏳ Pending</span>;
+    if (st === 'disetujui') return <span className="badge badge-success"><i className="fa-solid fa-check" /> Disetujui</span>;
+    if (st === 'ditolak') return <span className="badge badge-danger"><i className="fa-solid fa-xmark" /> Ditolak</span>;
+    return <span className="badge badge-warning"><i className="fa-solid fa-clock" /> Pending</span>;
   };
 
   if (loading)
     return (
       <Layout title="Detail Surat Keluar">
-        <div style={styles.center}>Memuat…</div>
+        <LoadingSpinner variant="page" text="Memuat detail surat keluar…" />
       </Layout>
     );
   if (error)
     return (
       <Layout title="Detail Surat Keluar">
-        <div style={styles.alertError}>{error}</div>
+        <div className="badge badge-danger" style={{ width: '100%', padding: '1rem' }}>
+          <i className="fa-solid fa-triangle-exclamation" /> {error}
+        </div>
       </Layout>
     );
 
   return (
     <Layout title="Detail Surat Keluar">
-      <div style={styles.container}>
+      <div style={{ maxWidth: '900px', display: 'flex', flexDirection: 'column', gap: '2rem', margin: '0 auto' }}>
         {/* Main Card */}
-        <div style={styles.card}>
+        <div className="glass-card animate-fade-in" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
           {/* Top Bar */}
-          <div style={styles.topBar}>
-            <Link to="/surat-keluar" style={styles.backLink}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <Link to="/surat-keluar" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }}>
               ← Kembali ke Daftar
             </Link>
-            <div style={styles.topActions}>
-              <Link to={`/surat-keluar/${id}/edit`} style={styles.editBtn}>
-                ✏️ Edit
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <Link to={`/surat-keluar/${id}/edit`} className="btn btn-secondary btn-sm" style={{ color: 'var(--warning)', borderColor: 'var(--warning-border)' }}>
+                <i className="fa-solid fa-pen-to-square" /> Edit
               </Link>
-              <button onClick={handleDelete} style={styles.deleteBtn}>
-                🗑 Hapus
+              <button onClick={handleDelete} className="btn btn-danger btn-sm">
+                <i className="fa-solid fa-trash-can" /> Hapus
               </button>
             </div>
           </div>
 
           {/* Nomor Surat */}
-          <div style={styles.nomorBadge}>
-            <span style={styles.nomorLabel}>Nomor Surat Keluar</span>
-            <h2 style={styles.nomorText}>
-              {surat.nomor_surat || (
-                <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Belum ada nomor (Draft)</span>
-              )}
+          <div style={{ paddingBottom: '1.25rem', borderBottom: '1px solid var(--border-light)' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+              Nomor Surat Keluar
+            </span>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '4px 0 0' }} className="title-gradient">
+              {surat.nomor_surat || <span style={{ color: 'var(--text-light)', fontStyle: 'italic' }}>Belum ada nomor (Draft)</span>}
             </h2>
           </div>
 
           {/* Perihal */}
-          <div style={styles.perihalBox}>
-            <p style={styles.perihalLabel}>Perihal</p>
-            <p style={styles.perihalText}>{surat.perihal}</p>
+          <div style={{ background: 'rgba(255, 255, 255, 0.7)', borderRadius: 'var(--radius-md)', padding: '1.25rem', border: '1px solid var(--border-light)' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, margin: '0 0 6px' }}>
+              Perihal
+            </p>
+            <p style={{ fontSize: '1.05rem', color: 'var(--text-main)', lineHeight: '1.6', margin: 0, fontWeight: 500 }}>
+              {surat.perihal}
+            </p>
           </div>
 
-          {/* Isi Ringkas (if any) */}
+          {/* Ringkasan Isi */}
           {surat.isi_ringkas && (
-            <div style={styles.section}>
-              <p style={styles.sectionLabel}>📝 Ringkasan Isi</p>
-              <p style={styles.isiText}>{surat.isi_ringkas}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', margin: 0 }}>
+                <i className="fa-solid fa-file-lines" /> Ringkasan Isi
+              </p>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: '1.6', margin: 0 }}>{surat.isi_ringkas}</p>
             </div>
           )}
 
           {/* Info Grid */}
-          <div style={styles.infoGrid}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.25rem' }}>
             <InfoItem label="Tujuan Surat" value={surat.tujuan_surat} />
             <InfoItem label="Tanggal Surat" value={formatDate(surat.tanggal_surat)} />
             <InfoItem label="Dibuat oleh" value={surat.creator?.full_name || '-'} />
@@ -158,64 +165,68 @@ export default function SuratKeluarDetail() {
           </div>
 
           {/* Lampiran */}
-          <div style={styles.section}>
-            <p style={styles.sectionLabel}>📎 Lampiran</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', margin: 0 }}>
+              <i className="fa-solid fa-paperclip" /> Lampiran Surat
+            </p>
             {surat.file_url ? (
-              <a href={surat.file_url} target="_blank" rel="noreferrer" style={styles.fileBtn}>
-                Buka Lampiran
+              <a href={surat.file_url} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" style={{ width: 'fit-content' }}>
+                <i className="fa-solid fa-file-pdf" /> Buka Lampiran File
               </a>
             ) : (
-              <span style={styles.noFile}>Tidak ada lampiran</span>
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-light)' }}>Tidak ada lampiran file</span>
             )}
           </div>
         </div>
 
         {/* Approval Card */}
-        <div style={styles.approvalCard}>
-          <div style={styles.approvalHeader}>
-            <h3 style={styles.approvalTitle}>📋 Status Persetujuan (Approval)</h3>
+        <div className="glass-card animate-fade-in animate-delay-1" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
+              <i className="fa-solid fa-user-check" style={{ color: 'var(--primary)' }} /> Status Persetujuan (Approval)
+            </h3>
           </div>
 
-          <div style={styles.approvalBody}>
-            <div style={styles.approvalStatusRow}>
-              <span style={styles.approvalStatusLabel}>Status:</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status:</span>
               {getApprovalBadge(surat.status_approval)}
             </div>
 
             {surat.approver && (
-              <div style={styles.approvalInfoRow}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                 <InfoItem label="Diproses oleh" value={surat.approver?.full_name || '-'} />
                 <InfoItem label="Waktu Persetujuan" value={formatDateTime(surat.approved_at)} />
               </div>
             )}
 
             {surat.catatan_approval && (
-              <div style={styles.catatanBox}>
-                <p style={styles.catatanLabel}>Catatan Approval:</p>
-                <p style={styles.catatanText}>{surat.catatan_approval}</p>
+              <div style={{ background: 'rgba(255, 255, 255, 0.7)', padding: '0.875rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', margin: '0 0 4px' }}>Catatan Approval:</p>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: 0 }}>{surat.catatan_approval}</p>
               </div>
             )}
 
             {/* Approval Action Buttons */}
-            <div style={styles.approvalActions}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', paddingTop: '0.5rem' }}>
               <button
                 onClick={() => openApprovalPanel('Disetujui')}
-                style={styles.approveBtn}
+                className="btn btn-success"
               >
-                ✅ Setujui Surat
+                <i className="fa-solid fa-circle-check" /> Setujui Surat
               </button>
               <button
                 onClick={() => openApprovalPanel('Ditolak')}
-                style={styles.rejectBtn}
+                className="btn btn-danger"
               >
-                ❌ Tolak Surat
+                <i className="fa-solid fa-circle-xmark" /> Tolak Surat
               </button>
               {surat.status_approval !== 'Pending' && (
                 <button
                   onClick={() => openApprovalPanel('Pending')}
-                  style={styles.resetBtn}
+                  className="btn btn-secondary"
                 >
-                  ↩ Reset ke Pending
+                  <i className="fa-solid fa-rotate-left" /> Reset ke Pending
                 </button>
               )}
             </div>
@@ -223,44 +234,39 @@ export default function SuratKeluarDetail() {
 
           {/* Approval Panel (inline modal) */}
           {showApprovalPanel && (
-            <div style={styles.approvalPanel}>
-              <h4 style={styles.panelTitle}>
+            <div className="glass-modal" style={{ padding: '1.25rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>
                 {approvalAction === 'Disetujui'
-                  ? '✅ Setujui Surat Keluar'
+                  ? 'Setujui Surat Keluar'
                   : approvalAction === 'Ditolak'
-                  ? '❌ Tolak Surat Keluar'
-                  : '↩ Reset Status ke Pending'}
+                  ? 'Tolak Surat Keluar'
+                  : 'Reset Status ke Pending'}
               </h4>
-              <div style={styles.panelField}>
-                <label style={styles.panelLabel}>Catatan (opsional):</label>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Catatan (opsional):</label>
                 <textarea
                   rows={3}
                   value={catatanApproval}
                   onChange={(e) => setCatatanApproval(e.target.value)}
                   placeholder="Tulis catatan persetujuan / penolakan..."
-                  style={styles.panelTextarea}
+                  className="input-field"
+                  style={{ resize: 'vertical' }}
                 />
               </div>
-              <div style={styles.panelActions}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                 <button
                   onClick={() => setShowApprovalPanel(false)}
-                  style={styles.panelCancelBtn}
+                  className="btn btn-secondary"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleApproval}
                   disabled={approving}
-                  style={
-                    approvalAction === 'Disetujui'
-                      ? styles.panelConfirmApproveBtn
-                      : approvalAction === 'Ditolak'
-                      ? styles.panelConfirmRejectBtn
-                      : styles.panelConfirmResetBtn
-                  }
+                  className={`btn ${approvalAction === 'Disetujui' ? 'btn-success' : approvalAction === 'Ditolak' ? 'btn-danger' : 'btn-secondary'}`}
                 >
                   {approving
-                    ? 'Memproses…'
+                    ? 'Memproses...'
                     : approvalAction === 'Disetujui'
                     ? 'Konfirmasi Setujui'
                     : approvalAction === 'Ditolak'
@@ -278,265 +284,13 @@ export default function SuratKeluarDetail() {
 
 function InfoItem({ label, value }) {
   return (
-    <div style={infoStyles.item}>
-      <span style={infoStyles.label}>{label}</span>
-      <span style={infoStyles.value}>{value || '-'}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>
+        {label}
+      </span>
+      <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 600 }}>
+        {value || '-'}
+      </span>
     </div>
   );
 }
-
-const styles = {
-  center: { textAlign: 'center', padding: '3rem', color: '#94a3b8' },
-  alertError: {
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    padding: '1rem',
-    borderRadius: '8px',
-    fontSize: '0.875rem',
-  },
-  container: {
-    maxWidth: '880px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2rem',
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    padding: '2rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.75rem',
-  },
-  topBar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '0.75rem',
-  },
-  backLink: {
-    color: '#2563eb',
-    textDecoration: 'none',
-    fontSize: '0.875rem',
-    fontWeight: '500',
-  },
-  topActions: { display: 'flex', gap: '0.5rem' },
-  editBtn: {
-    padding: '6px 14px',
-    backgroundColor: '#fef9c3',
-    color: '#a16207',
-    border: '1px solid #fde68a',
-    borderRadius: '6px',
-    textDecoration: 'none',
-    fontSize: '0.85rem',
-    fontWeight: '500',
-  },
-  deleteBtn: {
-    padding: '6px 14px',
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    border: '1px solid #fecaca',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.85rem',
-    fontWeight: '500',
-  },
-  nomorBadge: { paddingBottom: '1.5rem', borderBottom: '1px solid #f1f5f9' },
-  nomorLabel: {
-    fontSize: '0.75rem',
-    color: '#94a3b8',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    margin: '0 0 6px',
-  },
-  nomorText: { fontSize: '1.5rem', fontWeight: '700', color: '#1e293b', margin: 0 },
-  perihalBox: {
-    backgroundColor: '#f8fafc',
-    borderRadius: '8px',
-    padding: '1.25rem',
-    border: '1px solid #e2e8f0',
-  },
-  perihalLabel: {
-    fontSize: '0.75rem',
-    color: '#64748b',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    margin: '0 0 6px',
-  },
-  perihalText: { fontSize: '1rem', color: '#1e293b', lineHeight: '1.6', margin: 0 },
-  section: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
-  sectionLabel: { fontSize: '0.8rem', fontWeight: '600', color: '#64748b', margin: 0 },
-  isiText: { fontSize: '0.9rem', color: '#475569', lineHeight: '1.6', margin: 0 },
-  infoGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-    gap: '1.25rem',
-  },
-  fileBtn: {
-    display: 'inline-block',
-    padding: '8px 16px',
-    backgroundColor: '#eff6ff',
-    color: '#2563eb',
-    border: '1px solid #bfdbfe',
-    borderRadius: '6px',
-    textDecoration: 'none',
-    fontSize: '0.875rem',
-    fontWeight: '500',
-    width: 'fit-content',
-  },
-  noFile: { fontSize: '0.875rem', color: '#94a3b8' },
-
-  // Approval Card
-  approvalCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    padding: '2rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.25rem',
-  },
-  approvalHeader: { borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' },
-  approvalTitle: { fontSize: '1.1rem', fontWeight: '700', color: '#1e293b', margin: 0 },
-  approvalBody: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  approvalStatusRow: { display: 'flex', alignItems: 'center', gap: '8px' },
-  approvalStatusLabel: { fontSize: '0.9rem', fontWeight: '600', color: '#475569' },
-  approvalInfoRow: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-    gap: '1rem',
-  },
-  catatanBox: {
-    backgroundColor: '#f8fafc',
-    padding: '0.85rem',
-    borderRadius: '8px',
-    border: '1px solid #e2e8f0',
-  },
-  catatanLabel: { fontSize: '0.75rem', fontWeight: '600', color: '#64748b', margin: '0 0 4px' },
-  catatanText: { fontSize: '0.9rem', color: '#1e293b', margin: 0 },
-  badge: {
-    display: 'inline-block',
-    padding: '4px 12px',
-    borderRadius: '12px',
-    fontSize: '0.8rem',
-    fontWeight: '700',
-  },
-  badgePending: { backgroundColor: '#fef9c3', color: '#a16207' },
-  badgeApproved: { backgroundColor: '#dcfce7', color: '#15803d' },
-  badgeRejected: { backgroundColor: '#fee2e2', color: '#b91c1c' },
-  approvalActions: {
-    display: 'flex',
-    gap: '0.75rem',
-    flexWrap: 'wrap',
-    paddingTop: '0.5rem',
-  },
-  approveBtn: {
-    padding: '8px 18px',
-    backgroundColor: '#dcfce7',
-    color: '#15803d',
-    border: '1px solid #bbf7d0',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.85rem',
-  },
-  rejectBtn: {
-    padding: '8px 18px',
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    border: '1px solid #fecaca',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.85rem',
-  },
-  resetBtn: {
-    padding: '8px 18px',
-    backgroundColor: '#f1f5f9',
-    color: '#475569',
-    border: '1px solid #cbd5e1',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '500',
-    fontSize: '0.85rem',
-  },
-
-  // Approval Panel (inline)
-  approvalPanel: {
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: '10px',
-    padding: '1.25rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  panelTitle: { fontSize: '1rem', fontWeight: '700', color: '#1e293b', margin: 0 },
-  panelField: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  panelLabel: { fontSize: '0.85rem', fontWeight: '600', color: '#475569' },
-  panelTextarea: {
-    padding: '0.65rem 0.85rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.9rem',
-    fontFamily: 'inherit',
-    outline: 'none',
-    resize: 'vertical',
-  },
-  panelActions: { display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' },
-  panelCancelBtn: {
-    padding: '0.55rem 1rem',
-    backgroundColor: '#fff',
-    border: '1px solid #cbd5e1',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.85rem',
-    fontWeight: '500',
-    color: '#475569',
-  },
-  panelConfirmApproveBtn: {
-    padding: '0.55rem 1rem',
-    backgroundColor: '#16a34a',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.85rem',
-    fontWeight: '600',
-  },
-  panelConfirmRejectBtn: {
-    padding: '0.55rem 1rem',
-    backgroundColor: '#dc2626',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.85rem',
-    fontWeight: '600',
-  },
-  panelConfirmResetBtn: {
-    padding: '0.55rem 1rem',
-    backgroundColor: '#475569',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.85rem',
-    fontWeight: '600',
-  },
-};
-
-const infoStyles = {
-  item: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  label: {
-    fontSize: '0.75rem',
-    color: '#94a3b8',
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-  },
-  value: { fontSize: '0.9rem', color: '#1e293b', fontWeight: '500' },
-};

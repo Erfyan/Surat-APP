@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import {
   getSuratMasuk,
   getUsers,
@@ -10,9 +11,9 @@ import {
 } from '../../services/api';
 
 export default function DisposisiForm() {
-  const { id } = useParams(); // Jika mode edit
+  const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const presetSuratId = searchParams.get('surat_id'); // Jika dipanggil dari Detail Surat Masuk
+  const presetSuratId = searchParams.get('surat_id');
   const navigate = useNavigate();
 
   const isEdit = Boolean(id);
@@ -39,13 +40,11 @@ export default function DisposisiForm() {
       setLoading(true);
       setError('');
       try {
-        // Ambil daftar surat masuk & daftar user
         const [suratRes, userRes] = await Promise.all([getSuratMasuk(), getUsers()]);
 
         if (suratRes.success) setSuratOptions(suratRes.data || []);
         if (userRes.success) setUserOptions(userRes.data || []);
 
-        // Jika mode edit, ambil detail disposisi
         if (isEdit) {
           const dispRes = await getDisposisiById(id);
           if (!dispRes.success) throw new Error(dispRes.message);
@@ -102,7 +101,6 @@ export default function DisposisiForm() {
         if (!res.success) throw new Error(res.message);
       }
 
-      // Kembali ke detail surat jika ada presetSuratId, atau ke daftar disposisi
       if (presetSuratId) {
         navigate(`/surat-masuk/${presetSuratId}`);
       } else {
@@ -120,35 +118,43 @@ export default function DisposisiForm() {
   if (loading) {
     return (
       <Layout title={title}>
-        <div style={styles.center}>Memuat data formulir…</div>
+        <LoadingSpinner variant="page" text="Memuat data formulir…" />
       </Layout>
     );
   }
 
   return (
     <Layout title={title}>
-      <div style={styles.card}>
-        <div style={styles.topBar}>
+      <div className="glass-card animate-fade-in" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.75rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }} className="title-gradient">
+            <i className="fa-solid fa-clipboard-list" style={{ color: 'var(--primary)' }} /> {title}
+          </h3>
           <Link
             to={presetSuratId ? `/surat-masuk/${presetSuratId}` : '/disposisi'}
-            style={styles.backLink}
+            className="btn btn-ghost btn-sm"
+            style={{ color: 'var(--primary)' }}
           >
             ← Kembali
           </Link>
         </div>
 
-        {error && <div style={styles.alertError}>{error}</div>}
+        {error && (
+          <div className="badge badge-danger" style={{ width: '100%', padding: '0.875rem 1.25rem', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+            <i className="fa-solid fa-triangle-exclamation" /> {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} style={styles.form}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Pilih Surat Masuk */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Pilih Surat Masuk *</label>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">Pilih Surat Masuk <span style={{ color: 'var(--danger)' }}>*</span></label>
             <select
               name="surat_masuk_id"
               value={formData.surat_masuk_id}
               onChange={handleChange}
               disabled={isEdit || Boolean(presetSuratId)}
-              style={styles.select}
+              className="input-field"
               required
             >
               <option value="">-- Pilih Surat Masuk --</option>
@@ -161,15 +167,15 @@ export default function DisposisiForm() {
           </div>
 
           {/* Grid Dua Kolom */}
-          <div style={styles.grid2}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
             {/* Penerima Disposisi */}
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Penerima Disposisi *</label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Penerima Disposisi <span style={{ color: 'var(--danger)' }}>*</span></label>
               <select
                 name="penerima_id"
                 value={formData.penerima_id}
                 onChange={handleChange}
-                style={styles.select}
+                className="input-field"
                 required
               >
                 <option value="">-- Pilih Pegawai / Pejabat --</option>
@@ -182,13 +188,13 @@ export default function DisposisiForm() {
             </div>
 
             {/* Sifat Disposisi */}
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Sifat Disposisi</label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Sifat Disposisi</label>
               <select
                 name="sifat"
                 value={formData.sifat}
                 onChange={handleChange}
-                style={styles.select}
+                className="input-field"
               >
                 <option value="Biasa">Biasa</option>
                 <option value="Penting">Penting</option>
@@ -199,54 +205,56 @@ export default function DisposisiForm() {
           </div>
 
           {/* Instruksi Disposisi */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Instruksi / Petunjuk *</label>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">Instruksi / Petunjuk <span style={{ color: 'var(--danger)' }}>*</span></label>
             <textarea
               name="instruksi"
               rows={3}
               value={formData.instruksi}
               onChange={handleChange}
               placeholder="Contoh: Tanggapi dan selesaikan, Siapkan bahan rapat, Mohon ditindaklanjuti..."
-              style={styles.textarea}
+              className="input-field"
+              style={{ resize: 'vertical' }}
               required
             />
           </div>
 
           {/* Catatan Tambahan */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Catatan Tambahan (Opsional)</label>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">Catatan Tambahan (Opsional)</label>
             <textarea
               name="catatan"
               rows={2}
               value={formData.catatan}
               onChange={handleChange}
               placeholder="Catatan tambahan untuk penerima..."
-              style={styles.textarea}
+              className="input-field"
+              style={{ resize: 'vertical' }}
             />
           </div>
 
           {/* Grid Dua Kolom untuk Batas Waktu & Status */}
-          <div style={styles.grid2}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
             {/* Batas Waktu */}
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Batas Waktu Penyelesaian</label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Batas Waktu Penyelesaian</label>
               <input
                 type="date"
                 name="batas_waktu"
                 value={formData.batas_waktu}
                 onChange={handleChange}
-                style={styles.input}
+                className="input-field"
               />
             </div>
 
             {/* Status Disposisi */}
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Status Disposisi</label>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Status Disposisi</label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                style={styles.select}
+                className="input-field"
               >
                 <option value="Menunggu">Menunggu</option>
                 <option value="Diproses">Diproses</option>
@@ -256,18 +264,18 @@ export default function DisposisiForm() {
           </div>
 
           {/* Submit Action */}
-          <div style={styles.formActions}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.875rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-light)' }}>
             <button
               type="button"
               onClick={() =>
                 navigate(presetSuratId ? `/surat-masuk/${presetSuratId}` : '/disposisi')
               }
-              style={styles.cancelBtn}
+              className="btn btn-secondary"
             >
               Batal
             </button>
-            <button type="submit" disabled={submitting} style={styles.submitBtn}>
-              {submitting ? 'Menyimpan…' : isEdit ? 'Simpan Perubahan' : 'Kirim Disposisi'}
+            <button type="submit" disabled={submitting} className="btn btn-primary">
+              {submitting ? 'Menyimpan...' : <><i className="fa-solid fa-paper-plane" /> {isEdit ? 'Simpan Perubahan' : 'Kirim Disposisi'}</>}
             </button>
           </div>
         </form>
@@ -275,92 +283,3 @@ export default function DisposisiForm() {
     </Layout>
   );
 }
-
-const styles = {
-  center: { textAlign: 'center', padding: '3rem', color: '#94a3b8' },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    padding: '2rem',
-    maxWidth: '780px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
-  },
-  topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  backLink: {
-    color: '#2563eb',
-    textDecoration: 'none',
-    fontSize: '0.875rem',
-    fontWeight: '500',
-  },
-  alertError: {
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    fontSize: '0.875rem',
-  },
-  form: { display: 'flex', flexDirection: 'column', gap: '1.25rem' },
-  formGroup: { display: 'flex', flexDirection: 'column', gap: '0.4rem' },
-  label: { fontSize: '0.85rem', fontWeight: '600', color: '#334155' },
-  grid2: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '1.25rem',
-  },
-  input: {
-    padding: '0.65rem 0.85rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.9rem',
-    outline: 'none',
-  },
-  select: {
-    padding: '0.65rem 0.85rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.9rem',
-    backgroundColor: '#fff',
-    outline: 'none',
-  },
-  textarea: {
-    padding: '0.65rem 0.85rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.9rem',
-    fontFamily: 'inherit',
-    outline: 'none',
-    resize: 'vertical',
-  },
-  formActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.75rem',
-    marginTop: '1rem',
-    paddingTop: '1rem',
-    borderTop: '1px solid #f1f5f9',
-  },
-  cancelBtn: {
-    padding: '0.65rem 1.25rem',
-    backgroundColor: '#f1f5f9',
-    color: '#475569',
-    border: '1px solid #cbd5e1',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '500',
-    fontSize: '0.9rem',
-  },
-  submitBtn: {
-    padding: '0.65rem 1.5rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-  },
-};

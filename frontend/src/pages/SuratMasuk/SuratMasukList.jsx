@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+import ConfirmModal from '../../components/ConfirmModal';
+import EmptyState from '../../components/EmptyState';
+import { useToast } from '../../context/ToastContext';
 import { getSuratMasuk, deleteSuratMasuk } from '../../services/api';
 
 export default function SuratMasukList() {
@@ -10,7 +14,10 @@ export default function SuratMasukList() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [error, setError] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, nomor: '' });
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const fetchData = async () => {
     setLoading(true);
@@ -21,6 +28,7 @@ export default function SuratMasukList() {
       setSuratList(res.data || []);
     } catch (err) {
       setError(err.message || 'Gagal memuat data surat masuk');
+      addToast(err.message || 'Gagal memuat data surat masuk', 'error');
     } finally {
       setLoading(false);
     }
@@ -35,280 +43,177 @@ export default function SuratMasukList() {
     fetchData();
   };
 
-  const handleDelete = async (id, nomor) => {
-    if (!confirm(`Hapus surat "${nomor}"?`)) return;
+  const openDeleteModal = (id, nomor) => {
+    setDeleteModal({ isOpen: true, id, nomor });
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModal({ isOpen: false, id: null, nomor: '' });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.id) return;
+    setDeleting(true);
     try {
-      const res = await deleteSuratMasuk(id);
+      const res = await deleteSuratMasuk(deleteModal.id);
       if (!res.success) throw new Error(res.message);
-      setSuratList((prev) => prev.filter((s) => s.id !== id));
+      setSuratList((prev) => prev.filter((s) => s.id !== deleteModal.id));
+      addToast(`Surat Masuk "${deleteModal.nomor}" berhasil dihapus.`, 'success');
+      closeDeleteModal();
     } catch (err) {
-      alert('Gagal menghapus: ' + err.message);
+      addToast('Gagal menghapus: ' + err.message, 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('id-ID', {
-      day: '2-digit', month: 'long', year: 'numeric',
+      day: '2-digit', month: 'short', year: 'numeric',
     });
   };
 
   return (
     <Layout title="Surat Masuk">
-      {/* Toolbar */}
-      <form onSubmit={handleSearchSubmit} style={styles.toolbar}>
-        <input
-          type="text"
-          placeholder="🔍 Cari nomor, asal, perihal..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={styles.searchInput}
-        />
-        <input
-          type="date"
-          title="Dari Tanggal"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          style={styles.dateInput}
-        />
-        <input
-          type="date"
-          title="Sampai Tanggal"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          style={styles.dateInput}
-        />
-        <button type="submit" style={styles.searchBtn}>
-          Cari
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setSearch('');
-            setStartDate('');
-            setEndDate('');
-            setTimeout(fetchData, 50);
-          }}
-          style={styles.resetBtn}
-        >
-          Reset
-        </button>
-        <button type="button" onClick={() => navigate('/surat-masuk/tambah')} style={styles.addBtn}>
-          + Tambah Surat
-        </button>
-      </form>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Glass Toolbar */}
+        <form onSubmit={handleSearchSubmit} className="glass-card" style={{ padding: '1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 2, minWidth: '200px' }}>
+            <input
+              type="text"
+              placeholder="Cari nomor, asal, perihal..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-field"
+              style={{ paddingLeft: '2.25rem' }}
+            />
+            <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+          </div>
 
-      {/* Error */}
-      {error && <div style={styles.alertError}>{error}</div>}
+          <input
+            type="date"
+            title="Dari Tanggal"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="input-field"
+            style={{ width: 'auto' }}
+          />
+          <input
+            type="date"
+            title="Sampai Tanggal"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="input-field"
+            style={{ width: 'auto' }}
+          />
+          <button type="submit" className="btn btn-primary">
+            <i className="fa-solid fa-magnifying-glass" /> Cari
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSearch('');
+              setStartDate('');
+              setEndDate('');
+              setTimeout(fetchData, 50);
+            }}
+            className="btn btn-secondary"
+          >
+            <i className="fa-solid fa-rotate-left" /> Reset
+          </button>
+          <button type="button" onClick={() => navigate('/surat-masuk/tambah')} className="btn btn-success" style={{ marginLeft: 'auto' }}>
+            <i className="fa-solid fa-plus" /> Tambah Surat
+          </button>
+        </form>
 
-      {/* Loading */}
-      {loading ? (
-        <div style={styles.empty}>Memuat data…</div>
-      ) : suratList.length === 0 ? (
-        <div style={styles.empty}>
-          {search || startDate || endDate ? 'Tidak ada surat yang cocok dengan kriteria pencarian.' : 'Belum ada data surat masuk.'}
-        </div>
-      ) : (
-        /* Table */
-        <div style={styles.tableWrapper}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>No</th>
-                <th style={styles.th}>Nomor Surat</th>
-                <th style={styles.th}>Tanggal Surat</th>
-                <th style={styles.th}>Asal Surat</th>
-                <th style={styles.th}>Perihal</th>
-                <th style={styles.th}>Lampiran</th>
-                <th style={styles.th}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {suratList.map((surat, i) => (
-                <tr key={surat.id} style={i % 2 === 0 ? styles.trEven : styles.trOdd}>
-                  <td style={styles.td}>{i + 1}</td>
-                  <td style={{ ...styles.td, fontWeight: '600', color: '#1e293b' }}>
-                    {surat.nomor_surat}
-                  </td>
-                  <td style={styles.td}>{formatDate(surat.tanggal_surat)}</td>
-                  <td style={styles.td}>{surat.asal_surat}</td>
-                  <td style={styles.td}>{surat.perihal}</td>
-                  <td style={styles.td}>
-                    {surat.file_url ? (
-                      <a href={surat.file_url} target="_blank" rel="noreferrer" style={styles.fileLink}>
-                        📎 Lihat
-                      </a>
-                    ) : (
-                      <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>-</span>
-                    )}
-                  </td>
-                  <td style={styles.td}>
-                    <div style={styles.actionGroup}>
-                      <Link to={`/surat-masuk/${surat.id}`} style={styles.btnDetail}>
-                        Detail
-                      </Link>
-                      <Link to={`/surat-masuk/${surat.id}/edit`} style={styles.btnEdit}>
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(surat.id, surat.nomor_surat)}
-                        style={styles.btnDelete}
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                  </td>
+        {/* Error */}
+        {error && (
+          <div className="badge badge-danger" style={{ width: '100%', padding: '0.875rem 1.25rem', fontSize: '0.875rem' }}>
+            <i className="fa-solid fa-triangle-exclamation" /> {error}
+          </div>
+        )}
+
+        {/* Content */}
+        {loading ? (
+          <LoadingSpinner variant="inline" text="Memuat data surat masuk…" />
+        ) : suratList.length === 0 ? (
+          <EmptyState
+            icon="fa-inbox"
+            title="Belum Ada Surat Masuk"
+            description={search || startDate || endDate ? 'Tidak ada surat masuk yang cocok dengan kriteria pencarian.' : 'Belum ada surat masuk terarsip di sistem.'}
+            actionLink="/surat-masuk/tambah"
+            actionText="Tambah Surat Masuk"
+          />
+        ) : (
+          <div className="table-container glass-card">
+            <table className="table-modern">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nomor Surat</th>
+                  <th>Tanggal</th>
+                  <th>Asal Surat</th>
+                  <th>Perihal</th>
+                  <th>Lampiran</th>
+                  <th style={{ textAlign: 'center' }}>Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {suratList.map((surat, i) => (
+                  <tr key={surat.id}>
+                    <td style={{ fontWeight: 600, color: 'var(--text-light)' }}>{i + 1}</td>
+                    <td style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                      <Link to={`/surat-masuk/${surat.id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+                        {surat.nomor_surat}
+                      </Link>
+                    </td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{formatDate(surat.tanggal_surat)}</td>
+                    <td style={{ fontWeight: 600 }}>{surat.asal_surat}</td>
+                    <td>{surat.perihal}</td>
+                    <td>
+                      {surat.file_url ? (
+                        <a href={surat.file_url} target="_blank" rel="noreferrer" className="badge badge-info" style={{ textDecoration: 'none' }}>
+                          <i className="fa-solid fa-paperclip" /> Lihat
+                        </a>
+                      ) : (
+                        <span style={{ color: 'var(--text-light)', fontSize: '0.8rem' }}>-</span>
+                      )}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'center' }}>
+                        <Link to={`/surat-masuk/${surat.id}`} className="btn btn-secondary btn-sm">
+                          <i className="fa-solid fa-eye" /> Detail
+                        </Link>
+                        <Link to={`/surat-masuk/${surat.id}/edit`} className="btn btn-secondary btn-sm" style={{ color: 'var(--warning)', borderColor: 'var(--warning-border)' }}>
+                          <i className="fa-solid fa-pen-to-square" /> Edit
+                        </Link>
+                        <button
+                          onClick={() => openDeleteModal(surat.id, surat.nomor_surat)}
+                          className="btn btn-danger btn-sm"
+                        >
+                          <i className="fa-solid fa-trash-can" /> Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="Hapus Surat Masuk"
+        message={`Apakah Anda yakin ingin menghapus surat masuk "${deleteModal.nomor}"? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Surat"
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
+        loading={deleting}
+      />
     </Layout>
   );
 }
-
-const styles = {
-  toolbar: {
-    display: 'flex',
-    gap: '0.75rem',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-    flexWrap: 'wrap',
-  },
-  searchInput: {
-    flex: 2,
-    minWidth: '200px',
-    padding: '0.65rem 1rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    backgroundColor: '#fff',
-    outline: 'none',
-  },
-  dateInput: {
-    padding: '0.6rem 0.8rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    fontSize: '0.85rem',
-    backgroundColor: '#fff',
-    outline: 'none',
-  },
-  searchBtn: {
-    padding: '0.65rem 1.1rem',
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.875rem',
-  },
-  resetBtn: {
-    padding: '0.65rem 1rem',
-    backgroundColor: '#94a3b8',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.875rem',
-  },
-  addBtn: {
-    padding: '0.65rem 1.25rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    whiteSpace: 'nowrap',
-    marginLeft: 'auto',
-  },
-  alertError: {
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    marginBottom: '1rem',
-    fontSize: '0.875rem',
-  },
-  empty: {
-    textAlign: 'center',
-    padding: '3rem',
-    color: '#94a3b8',
-    backgroundColor: '#fff',
-    borderRadius: '10px',
-    border: '1px dashed #e2e8f0',
-  },
-  tableWrapper: {
-    backgroundColor: '#fff',
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    overflowX: 'auto',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '0.875rem',
-  },
-  th: {
-    padding: '0.85rem 1rem',
-    backgroundColor: '#f8fafc',
-    color: '#64748b',
-    fontWeight: '600',
-    textAlign: 'left',
-    borderBottom: '1px solid #e2e8f0',
-    whiteSpace: 'nowrap',
-  },
-  td: {
-    padding: '0.85rem 1rem',
-    color: '#475569',
-    borderBottom: '1px solid #f1f5f9',
-    verticalAlign: 'middle',
-  },
-  trEven: { backgroundColor: '#fff' },
-  trOdd: { backgroundColor: '#fafafa' },
-  fileLink: {
-    color: '#2563eb',
-    textDecoration: 'none',
-    fontSize: '0.8rem',
-    fontWeight: '500',
-  },
-  actionGroup: {
-    display: 'flex',
-    gap: '6px',
-  },
-  btnDetail: {
-    padding: '4px 10px',
-    backgroundColor: '#f1f5f9',
-    color: '#475569',
-    border: '1px solid #e2e8f0',
-    borderRadius: '5px',
-    textDecoration: 'none',
-    fontSize: '0.78rem',
-    fontWeight: '500',
-  },
-  btnEdit: {
-    padding: '4px 10px',
-    backgroundColor: '#fef9c3',
-    color: '#a16207',
-    border: '1px solid #fde68a',
-    borderRadius: '5px',
-    textDecoration: 'none',
-    fontSize: '0.78rem',
-    fontWeight: '500',
-  },
-  btnDelete: {
-    padding: '4px 10px',
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    border: '1px solid #fecaca',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '0.78rem',
-    fontWeight: '500',
-  },
-};

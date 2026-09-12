@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+import ConfirmModal from '../../components/ConfirmModal';
+import EmptyState from '../../components/EmptyState';
+import { useToast } from '../../context/ToastContext';
 import { getDisposisi, updateDisposisi, deleteDisposisi } from '../../services/api';
 
 export default function DisposisiList() {
@@ -9,7 +13,10 @@ export default function DisposisiList() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [error, setError] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, perihal: '' });
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const fetchData = async () => {
     setLoading(true);
@@ -20,6 +27,7 @@ export default function DisposisiList() {
       setDisposisiList(res.data || []);
     } catch (err) {
       setError(err.message || 'Gagal memuat data disposisi');
+      addToast(err.message || 'Gagal memuat data disposisi', 'error');
     } finally {
       setLoading(false);
     }
@@ -29,14 +37,27 @@ export default function DisposisiList() {
     fetchData();
   }, []);
 
-  const handleDelete = async (id, perihal) => {
-    if (!confirm(`Hapus disposisi untuk "${perihal || 'surat ini'}"?`)) return;
+  const openDeleteModal = (id, perihal) => {
+    setDeleteModal({ isOpen: true, id, perihal: perihal || 'surat ini' });
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModal({ isOpen: false, id: null, perihal: '' });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.id) return;
+    setDeleting(true);
     try {
-      const res = await deleteDisposisi(id);
+      const res = await deleteDisposisi(deleteModal.id);
       if (!res.success) throw new Error(res.message);
-      setDisposisiList((prev) => prev.filter((item) => item.id !== id));
+      setDisposisiList((prev) => prev.filter((item) => item.id !== deleteModal.id));
+      addToast(`Disposisi berhasil dihapus.`, 'success');
+      closeDeleteModal();
     } catch (err) {
-      alert('Gagal menghapus: ' + err.message);
+      addToast('Gagal menghapus: ' + err.message, 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -47,8 +68,9 @@ export default function DisposisiList() {
       setDisposisiList((prev) =>
         prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
       );
+      addToast(`Status disposisi diperbarui ke "${newStatus}".`, 'info');
     } catch (err) {
-      alert('Gagal memperbarui status: ' + err.message);
+      addToast('Gagal memperbarui status: ' + err.message, 'error');
     }
   };
 
@@ -76,315 +98,169 @@ export default function DisposisiList() {
 
   const getSifatBadge = (sifat) => {
     const s = (sifat || '').toLowerCase();
-    if (s === 'rahasia') return <span style={{ ...styles.badge, ...styles.badgeRahasia }}>Rahasia</span>;
-    if (s === 'segera') return <span style={{ ...styles.badge, ...styles.badgeSegera }}>Segera</span>;
-    if (s === 'penting') return <span style={{ ...styles.badge, ...styles.badgePenting }}>Penting</span>;
-    return <span style={{ ...styles.badge, ...styles.badgeBiasa }}>Biasa</span>;
+    if (s === 'rahasia') return <span className="badge badge-danger"><i className="fa-solid fa-user-shield" /> Rahasia</span>;
+    if (s === 'segera') return <span className="badge badge-warning"><i className="fa-solid fa-bolt" /> Segera</span>;
+    if (s === 'penting') return <span className="badge badge-purple"><i className="fa-solid fa-thumbtack" /> Penting</span>;
+    return <span className="badge badge-info"><i className="fa-solid fa-note-sticky" /> Biasa</span>;
   };
 
   const getStatusBadge = (status) => {
     const st = (status || '').toLowerCase();
-    if (st === 'selesai') return <span style={{ ...styles.badge, ...styles.badgeSelesai }}>✓ Selesai</span>;
-    if (st === 'diproses') return <span style={{ ...styles.badge, ...styles.badgeDiproses }}>⚡ Diproses</span>;
-    return <span style={{ ...styles.badge, ...styles.badgeMenunggu }}>⏳ Menunggu</span>;
+    if (st === 'selesai') return <span className="badge badge-success"><i className="fa-solid fa-check" /> Selesai</span>;
+    if (st === 'diproses') return <span className="badge badge-info"><i className="fa-solid fa-spinner fa-spin" /> Diproses</span>;
+    return <span className="badge badge-warning"><i className="fa-solid fa-clock" /> Menunggu</span>;
   };
 
   return (
     <Layout title="Disposisi Surat">
-      {/* Toolbar */}
-      <div style={styles.toolbar}>
-        <input
-          type="text"
-          placeholder="🔍 Cari nomor surat, perihal, penerima, atau instruksi..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={styles.searchInput}
-        />
-        <div style={styles.filterGroup}>
-          <button
-            onClick={() => setStatusFilter('ALL')}
-            style={statusFilter === 'ALL' ? styles.filterBtnActive : styles.filterBtn}
-          >
-            Semua
-          </button>
-          <button
-            onClick={() => setStatusFilter('Menunggu')}
-            style={statusFilter === 'Menunggu' ? styles.filterBtnActive : styles.filterBtn}
-          >
-            ⏳ Menunggu
-          </button>
-          <button
-            onClick={() => setStatusFilter('Diproses')}
-            style={statusFilter === 'Diproses' ? styles.filterBtnActive : styles.filterBtn}
-          >
-            ⚡ Diproses
-          </button>
-          <button
-            onClick={() => setStatusFilter('Selesai')}
-            style={statusFilter === 'Selesai' ? styles.filterBtnActive : styles.filterBtn}
-          >
-            ✓ Selesai
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Glass Toolbar */}
+        <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+            <input
+              type="text"
+              placeholder="Cari nomor surat, perihal, penerima, atau instruksi..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-field"
+              style={{ paddingLeft: '2.25rem' }}
+            />
+            <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+          </div>
+
+          <div style={{ display: 'flex', gap: '4px', background: 'rgba(241, 245, 249, 0.9)', padding: '4px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+            {['ALL', 'Menunggu', 'Diproses', 'Selesai'].map((st) => (
+              <button
+                key={st}
+                onClick={() => setStatusFilter(st)}
+                className={`btn btn-sm ${statusFilter === st ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem' }}
+              >
+                {st === 'ALL'
+                  ? 'Semua'
+                  : st === 'Menunggu'
+                  ? <><i className="fa-solid fa-clock" /> Menunggu</>
+                  : st === 'Diproses'
+                  ? <><i className="fa-solid fa-bolt" /> Diproses</>
+                  : <><i className="fa-solid fa-check" /> Selesai</>}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={() => navigate('/disposisi/tambah')} className="btn btn-primary" style={{ marginLeft: 'auto' }}>
+            <i className="fa-solid fa-plus" /> Buat Disposisi
           </button>
         </div>
-        <button onClick={() => navigate('/disposisi/tambah')} style={styles.addBtn}>
-          + Buat Disposisi
-        </button>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="badge badge-danger" style={{ width: '100%', padding: '0.875rem 1.25rem', fontSize: '0.875rem' }}>
+            <i className="fa-solid fa-triangle-exclamation" /> {error}
+          </div>
+        )}
+
+        {/* Loading & Empty */}
+        {loading ? (
+          <LoadingSpinner variant="inline" text="Memuat data disposisi…" />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon="fa-clipboard-list"
+            title="Belum Ada Disposisi"
+            description={search || statusFilter !== 'ALL' ? 'Tidak ada disposisi yang sesuai dengan kriteria filter.' : 'Belum ada surat yang didisposisikan.'}
+            actionLink="/disposisi/tambah"
+            actionText="Buat Disposisi Surat"
+          />
+        ) : (
+          <div className="table-container glass-card">
+            <table className="table-modern">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Surat Masuk</th>
+                  <th>Pengirim → Penerima</th>
+                  <th>Instruksi / Catatan</th>
+                  <th>Sifat</th>
+                  <th>Batas Waktu</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'center' }}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((item, i) => (
+                  <tr key={item.id}>
+                    <td style={{ fontWeight: 600, color: 'var(--text-light)' }}>{i + 1}</td>
+                    <td>
+                      {item.surat_masuk ? (
+                        <div>
+                          <Link to={`/surat-masuk/${item.surat_masuk.id}`} style={{ fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
+                            {item.surat_masuk.nomor_surat}
+                          </Link>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>{item.surat_masuk.perihal}</div>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-light)' }}>Surat tidak ada</span>
+                      )}
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>
+                        {item.pengirim?.full_name || 'Sistem'}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        <i className="fa-solid fa-arrow-right-long" /> {item.penerima?.full_name || '-'} ({item.penerima?.jabatan || item.penerima?.role || 'Staff'})
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{item.instruksi}</div>
+                      {item.catatan && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Catatan: {item.catatan}</div>}
+                    </td>
+                    <td>{getSifatBadge(item.sifat)}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{formatDate(item.batas_waktu)}</td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {getStatusBadge(item.status)}
+                        <select
+                          value={item.status || 'Menunggu'}
+                          onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                          className="input-field"
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', height: 'auto' }}
+                        >
+                          <option value="Menunggu">Menunggu</option>
+                          <option value="Diproses">Diproses</option>
+                          <option value="Selesai">Selesai</option>
+                        </select>
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'center' }}>
+                        <Link to={`/disposisi/${item.id}/edit`} className="btn btn-secondary btn-sm" style={{ color: 'var(--warning)', borderColor: 'var(--warning-border)' }}>
+                          <i className="fa-solid fa-pen-to-square" /> Edit
+                        </Link>
+                        <button
+                          onClick={() => openDeleteModal(item.id, item.surat_masuk?.perihal)}
+                          className="btn btn-danger btn-sm"
+                        >
+                          <i className="fa-solid fa-trash-can" /> Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Error */}
-      {error && <div style={styles.alertError}>{error}</div>}
-
-      {/* Loading & Empty */}
-      {loading ? (
-        <div style={styles.empty}>Memuat data disposisi…</div>
-      ) : filtered.length === 0 ? (
-        <div style={styles.empty}>
-          {search || statusFilter !== 'ALL'
-            ? 'Tidak ada disposisi yang sesuai dengan kriteria filter.'
-            : 'Belum ada data disposisi.'}
-        </div>
-      ) : (
-        /* Table */
-        <div style={styles.tableWrapper}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>No</th>
-                <th style={styles.th}>Surat Masuk</th>
-                <th style={styles.th}>Pengirim → Penerima</th>
-                <th style={styles.th}>Instruksi / Catatan</th>
-                <th style={styles.th}>Sifat</th>
-                <th style={styles.th}>Batas Waktu</th>
-                <th style={styles.th}>Status</th>
-                <th style={styles.th}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((item, i) => (
-                <tr key={item.id} style={i % 2 === 0 ? styles.trEven : styles.trOdd}>
-                  <td style={styles.td}>{i + 1}</td>
-                  <td style={styles.td}>
-                    {item.surat_masuk ? (
-                      <div>
-                        <Link to={`/surat-masuk/${item.surat_masuk.id}`} style={styles.linkSurat}>
-                          {item.surat_masuk.nomor_surat}
-                        </Link>
-                        <div style={styles.subText}>{item.surat_masuk.perihal}</div>
-                      </div>
-                    ) : (
-                      <span style={{ color: '#94a3b8' }}>Surat tidak ada</span>
-                    )}
-                  </td>
-                  <td style={styles.td}>
-                    <div style={{ fontWeight: '500', color: '#1e293b' }}>
-                      {item.pengirim?.full_name || 'Sistem'}
-                    </div>
-                    <div style={styles.subText}>
-                      ➡️ {item.penerima?.full_name || '-'} ({item.penerima?.jabatan || item.penerima?.role || 'Staff'})
-                    </div>
-                  </td>
-                  <td style={styles.td}>
-                    <div style={{ fontWeight: '500', color: '#334155' }}>{item.instruksi}</div>
-                    {item.catatan && <div style={styles.subText}>Catatan: {item.catatan}</div>}
-                  </td>
-                  <td style={styles.td}>{getSifatBadge(item.sifat)}</td>
-                  <td style={styles.td}>{formatDate(item.batas_waktu)}</td>
-                  <td style={styles.td}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {getStatusBadge(item.status)}
-                      <select
-                        value={item.status || 'Menunggu'}
-                        onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                        style={styles.statusSelect}
-                      >
-                        <option value="Menunggu">Menunggu</option>
-                        <option value="Diproses">Diproses</option>
-                        <option value="Selesai">Selesai</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td style={styles.td}>
-                    <div style={styles.actionGroup}>
-                      <Link to={`/disposisi/${item.id}/edit`} style={styles.btnEdit}>
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(item.id, item.surat_masuk?.perihal)}
-                        style={styles.btnDelete}
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="Hapus Disposisi"
+        message={`Apakah Anda yakin ingin menghapus disposisi ini? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Disposisi"
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
+        loading={deleting}
+      />
     </Layout>
   );
 }
-
-const styles = {
-  toolbar: {
-    display: 'flex',
-    gap: '1rem',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-    flexWrap: 'wrap',
-  },
-  searchInput: {
-    flex: 1,
-    minWidth: '220px',
-    padding: '0.65rem 1rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    backgroundColor: '#fff',
-    outline: 'none',
-  },
-  filterGroup: {
-    display: 'flex',
-    gap: '4px',
-    backgroundColor: '#e2e8f0',
-    padding: '3px',
-    borderRadius: '8px',
-  },
-  filterBtn: {
-    padding: '0.45rem 0.85rem',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.8rem',
-    fontWeight: '500',
-    color: '#64748b',
-    transition: 'all 0.15s',
-  },
-  filterBtnActive: {
-    padding: '0.45rem 0.85rem',
-    backgroundColor: '#fff',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.8rem',
-    fontWeight: '600',
-    color: '#1e293b',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-  },
-  addBtn: {
-    padding: '0.65rem 1.25rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    whiteSpace: 'nowrap',
-  },
-  alertError: {
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    marginBottom: '1rem',
-    fontSize: '0.875rem',
-  },
-  empty: {
-    textAlign: 'center',
-    padding: '3rem',
-    color: '#94a3b8',
-    backgroundColor: '#fff',
-    borderRadius: '10px',
-    border: '1px dashed #e2e8f0',
-  },
-  tableWrapper: {
-    backgroundColor: '#fff',
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    overflowX: 'auto',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '0.875rem',
-  },
-  th: {
-    padding: '0.85rem 1rem',
-    backgroundColor: '#f8fafc',
-    color: '#64748b',
-    fontWeight: '600',
-    textAlign: 'left',
-    borderBottom: '1px solid #e2e8f0',
-    whiteSpace: 'nowrap',
-  },
-  td: {
-    padding: '0.85rem 1rem',
-    color: '#475569',
-    borderBottom: '1px solid #f1f5f9',
-    verticalAlign: 'middle',
-  },
-  trEven: { backgroundColor: '#fff' },
-  trOdd: { backgroundColor: '#fafafa' },
-  linkSurat: {
-    color: '#2563eb',
-    textDecoration: 'none',
-    fontWeight: '600',
-  },
-  subText: {
-    fontSize: '0.75rem',
-    color: '#64748b',
-    marginTop: '2px',
-  },
-  badge: {
-    display: 'inline-block',
-    padding: '3px 8px',
-    borderRadius: '12px',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  badgeBiasa: { backgroundColor: '#f1f5f9', color: '#475569' },
-  badgePenting: { backgroundColor: '#fef3c7', color: '#b45309' },
-  badgeSegera: { backgroundColor: '#ffedd5', color: '#c2410c' },
-  badgeRahasia: { backgroundColor: '#fee2e2', color: '#b91c1c' },
-  badgeMenunggu: { backgroundColor: '#fef9c3', color: '#a16207' },
-  badgeDiproses: { backgroundColor: '#dbeafe', color: '#1d4ed8' },
-  badgeSelesai: { backgroundColor: '#dcfce7', color: '#15803d' },
-  statusSelect: {
-    padding: '2px 4px',
-    fontSize: '0.75rem',
-    borderRadius: '4px',
-    border: '1px solid #cbd5e1',
-    backgroundColor: '#fff',
-    cursor: 'pointer',
-    marginTop: '2px',
-  },
-  actionGroup: {
-    display: 'flex',
-    gap: '6px',
-  },
-  btnEdit: {
-    padding: '4px 10px',
-    backgroundColor: '#fef9c3',
-    color: '#a16207',
-    border: '1px solid #fde68a',
-    borderRadius: '5px',
-    textDecoration: 'none',
-    fontSize: '0.78rem',
-    fontWeight: '500',
-  },
-  btnDelete: {
-    padding: '4px 10px',
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    border: '1px solid #fecaca',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '0.78rem',
-    fontWeight: '500',
-  },
-};

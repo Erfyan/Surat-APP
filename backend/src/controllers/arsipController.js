@@ -18,84 +18,74 @@ const getArsip = async (req, res) => {
 
     // 1. Ambil Surat Masuk jika type == 'all' atau type == 'surat_masuk'
     if (type === 'all' || type === 'surat_masuk') {
-      let querySM = supabase
-        .from('surat_masuk')
-        .select(`
-          *,
-          creator:profiles!created_by(full_name, role)
-        `);
+      try {
+        let querySM = supabase.from('surat_masuk').select('*');
 
-      if (startDate) {
-        querySM = querySM.gte('tanggal_surat', startDate);
-      }
-      if (endDate) {
-        querySM = querySM.lte('tanggal_surat', endDate);
-      }
+        if (startDate) {
+          querySM = querySM.gte('tanggal_surat', startDate);
+        }
+        if (endDate) {
+          querySM = querySM.lte('tanggal_surat', endDate);
+        }
 
-      const { data: dataSM, error: errSM } = await querySM;
-      if (errSM) throw errSM;
+        const { data: dataSM, error: errSM } = await querySM;
+        if (!errSM && dataSM) {
+          const formattedSM = dataSM.map((item) => ({
+            id: item.id,
+            jenis: 'Surat Masuk',
+            jenis_code: 'surat_masuk',
+            nomor_surat: item.nomor_surat || '-',
+            tanggal_surat: item.tanggal_surat,
+            pihak: item.asal_surat || '-',
+            perihal: item.perihal || '-',
+            file_url: item.file_url,
+            status_approval: 'Disetujui', // Surat masuk yang sudah diinput dianggap aktif/resmi
+            created_at: item.created_at,
+            detail_url: `/surat-masuk/${item.id}`,
+          }));
 
-      if (dataSM) {
-        const formattedSM = dataSM.map((item) => ({
-          id: item.id,
-          jenis: 'Surat Masuk',
-          jenis_code: 'surat_masuk',
-          nomor_surat: item.nomor_surat || '-',
-          tanggal_surat: item.tanggal_surat,
-          pihak: item.asal_surat || '-',
-          perihal: item.perihal || '-',
-          file_url: item.file_url,
-          status_approval: 'Disetujui', // Surat masuk yang sudah diinput dianggap aktif/resmi
-          created_at: item.created_at,
-          creator: item.creator,
-          detail_url: `/surat-masuk/${item.id}`,
-        }));
-
-        items.push(...formattedSM);
+          items.push(...formattedSM);
+        }
+      } catch (eSM) {
+        console.error('[GET_ARSIP_SM_WARN]:', eSM);
       }
     }
 
     // 2. Ambil Surat Keluar jika type == 'all' atau type == 'surat_keluar'
     if (type === 'all' || type === 'surat_keluar') {
-      let querySK = supabase
-        .from('surat_keluar')
-        .select(`
-          *,
-          creator:profiles!created_by(id, full_name, role, jabatan),
-          approver:profiles!approved_by(id, full_name, role, jabatan)
-        `);
+      try {
+        let querySK = supabase.from('surat_keluar').select('*');
 
-      if (startDate) {
-        querySK = querySK.gte('tanggal_surat', startDate);
-      }
-      if (endDate) {
-        querySK = querySK.lte('tanggal_surat', endDate);
-      }
-      if (status !== 'all') {
-        querySK = querySK.eq('status_approval', status);
-      }
+        if (startDate) {
+          querySK = querySK.gte('tanggal_surat', startDate);
+        }
+        if (endDate) {
+          querySK = querySK.lte('tanggal_surat', endDate);
+        }
+        if (status !== 'all') {
+          querySK = querySK.eq('status_approval', status);
+        }
 
-      const { data: dataSK, error: errSK } = await querySK;
-      if (errSK) throw errSK;
+        const { data: dataSK, error: errSK } = await querySK;
+        if (!errSK && dataSK) {
+          const formattedSK = dataSK.map((item) => ({
+            id: item.id,
+            jenis: 'Surat Keluar',
+            jenis_code: 'surat_keluar',
+            nomor_surat: item.nomor_surat || '-',
+            tanggal_surat: item.tanggal_surat,
+            pihak: item.tujuan_surat || '-',
+            perihal: item.perihal || '-',
+            file_url: item.file_url,
+            status_approval: item.status_approval || 'Pending',
+            created_at: item.created_at,
+            detail_url: `/surat-keluar/${item.id}`,
+          }));
 
-      if (dataSK) {
-        const formattedSK = dataSK.map((item) => ({
-          id: item.id,
-          jenis: 'Surat Keluar',
-          jenis_code: 'surat_keluar',
-          nomor_surat: item.nomor_surat || '-',
-          tanggal_surat: item.tanggal_surat,
-          pihak: item.tujuan_surat || '-',
-          perihal: item.perihal || '-',
-          file_url: item.file_url,
-          status_approval: item.status_approval || 'Pending',
-          created_at: item.created_at,
-          creator: item.creator,
-          approver: item.approver,
-          detail_url: `/surat-keluar/${item.id}`,
-        }));
-
-        items.push(...formattedSK);
+          items.push(...formattedSK);
+        }
+      } catch (eSK) {
+        console.error('[GET_ARSIP_SK_WARN]:', eSK);
       }
     }
 
@@ -112,7 +102,7 @@ const getArsip = async (req, res) => {
     }
 
     // 4. Urutkan berdasarkan tanggal_surat terbaru
-    items.sort((a, b) => new Date(b.tanggal_surat) - new Date(a.tanggal_surat));
+    items.sort((a, b) => new Date(b.tanggal_surat || 0) - new Date(a.tanggal_surat || 0));
 
     // 5. Statistik ringkasan arsip
     const stats = {

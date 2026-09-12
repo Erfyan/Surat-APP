@@ -9,6 +9,9 @@ router.post('/register', authController.register);
 // POST /api/auth/login - Login user & dapatkan token
 router.post('/login', authController.login);
 
+// POST /api/auth/refresh - Refresh JWT session token
+router.post('/refresh', authController.refreshTokenController);
+
 // GET /api/auth/me - Dapatkan data profile user yang sedang login (Protected)
 router.get('/me', verifyToken, authController.getMe);
 

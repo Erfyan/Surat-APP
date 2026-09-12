@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
+import { LoadingSpinner, SkeletonStatCards } from '../components/LoadingSpinner';
+import AnimatedCounter from '../components/AnimatedCounter';
 import { getSuratMasuk, getSuratKeluar, getDisposisi } from '../services/api';
 
 export default function Dashboard() {
@@ -74,114 +76,140 @@ export default function Dashboard() {
 
   const getApprovalBadge = (status) => {
     const st = (status || '').toLowerCase();
-    if (st === 'disetujui') return <span style={{ ...styles.badge, ...styles.badgeApproved }}>✓ Disetujui</span>;
-    if (st === 'ditolak') return <span style={{ ...styles.badge, ...styles.badgeRejected }}>✖ Ditolak</span>;
-    return <span style={{ ...styles.badge, ...styles.badgePending }}>⏳ Pending</span>;
+    if (st === 'disetujui') return <span className="badge badge-success"><i className="fa-solid fa-check" /> Disetujui</span>;
+    if (st === 'ditolak') return <span className="badge badge-danger"><i className="fa-solid fa-xmark" /> Ditolak</span>;
+    return <span className="badge badge-warning"><i className="fa-solid fa-clock" /> Pending</span>;
   };
 
   if (!user) return null;
 
   return (
     <Layout title="Dashboard Overview">
-      <div style={styles.container}>
-        {/* Welcome Banner */}
-        <div style={styles.welcomeCard}>
-          <div style={styles.welcomeText}>
-            <h2 style={styles.welcomeTitle}>Selamat Datang kembali, {user.full_name}! 👋</h2>
-            <p style={styles.welcomeSub}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+        {/* Hero Welcome Card */}
+        <div className="glass-card animate-fade-in" style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', zIndex: 1 }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--primary)' }}>
+              Selamat Datang kembali, {user.full_name}! 👋
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
               Sistem Pengelolaan Surat Masuk, Surat Keluar, dan Disposisi Instansi.
             </p>
           </div>
-          <div style={styles.userBadgeBox}>
-            <span style={styles.userBadgeRole}>{user.role || 'Staff'}</span>
-            {user.jabatan && <span style={styles.userBadgeJabatan}>{user.jabatan}</span>}
+
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', zIndex: 1 }}>
+            <span className="badge badge-info" style={{ fontSize: '0.825rem', padding: '0.4rem 0.875rem' }}>
+              {user.role || 'Staff'}
+            </span>
+            {user.jabatan && (
+              <span className="badge badge-warning" style={{ fontSize: '0.825rem', padding: '0.4rem 0.875rem' }}>
+                {user.jabatan}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Quick Action Bar */}
-        <div style={styles.quickActions}>
-          <Link to="/surat-masuk/tambah" style={styles.quickBtnPrimary}>
-            📥 + Tambah Surat Masuk
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <Link to="/surat-masuk/tambah" className="btn btn-primary" style={{ padding: '0.75rem 1.25rem' }}>
+            <i className="fa-solid fa-inbox" /> + Tambah Surat Masuk
           </Link>
-          <Link to="/surat-keluar/tambah" style={styles.quickBtnSecondary}>
-            📤 + Buat Surat Keluar
+          <Link to="/surat-keluar/tambah" className="btn btn-success" style={{ padding: '0.75rem 1.25rem' }}>
+            <i className="fa-solid fa-paper-plane" /> + Buat Surat Keluar
           </Link>
-          <Link to="/disposisi/tambah" style={styles.quickBtnInfo}>
-            📋 + Buat Disposisi
+          <Link to="/disposisi/tambah" className="btn btn-orange" style={{ padding: '0.75rem 1.25rem' }}>
+            <i className="fa-solid fa-clipboard-list" /> + Buat Disposisi
           </Link>
         </div>
 
         {/* Stat Cards Grid */}
-        <div style={styles.statsGrid}>
-          {/* Card 1: Surat Masuk */}
-          <div style={styles.statCard}>
-            <div style={styles.statHeader}>
-              <span style={styles.statIconBlue}>📥</span>
-              <span style={styles.statLabel}>Surat Masuk</span>
+        {loading ? (
+          <SkeletonStatCards count={3} />
+        ) : (
+          <div className="stats-grid animate-fade-in animate-delay-1">
+            {/* Card 1: Surat Masuk */}
+            <div className="glass-card stat-card" style={{ '--stat-accent': 'var(--primary-gradient)', '--stat-bg': 'var(--primary-light)', '--stat-color': 'var(--primary)' }}>
+              <div>
+                <div className="stat-icon-wrapper" style={{ marginBottom: '0.75rem' }}>
+                  <i className="fa-solid fa-inbox" />
+                </div>
+                <div style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-muted)' }}>Surat Masuk</div>
+                <div style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--text-main)', margin: '0.2rem 0' }}>
+                  <AnimatedCounter end={stats.suratMasukCount} duration={800} />
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>Total seluruh surat masuk terarsip</div>
+              </div>
             </div>
-            <div style={styles.statValue}>{loading ? '…' : stats.suratMasukCount}</div>
-            <div style={styles.statFooter}>Total seluruh surat masuk terarsip</div>
-          </div>
 
-          {/* Card 2: Surat Keluar */}
-          <div style={styles.statCard}>
-            <div style={styles.statHeader}>
-              <span style={styles.statIconGreen}>📤</span>
-              <span style={styles.statLabel}>Surat Keluar</span>
+            {/* Card 2: Surat Keluar */}
+            <div className="glass-card stat-card" style={{ '--stat-accent': 'linear-gradient(135deg, #10b981 0%, #059669 100%)', '--stat-bg': '#ecfdf5', '--stat-color': '#10b981' }}>
+              <div>
+                <div className="stat-icon-wrapper" style={{ marginBottom: '0.75rem' }}>
+                  <i className="fa-solid fa-paper-plane" />
+                </div>
+                <div style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-muted)' }}>Surat Keluar</div>
+                <div style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--text-main)', margin: '0.2rem 0' }}>
+                  <AnimatedCounter end={stats.suratKeluarCount} duration={800} />
+                </div>
+                <div style={{ fontSize: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                  <span style={{ color: 'var(--warning)', fontWeight: 700 }}>
+                    <i className="fa-solid fa-clock" /> <AnimatedCounter end={stats.suratKeluarPending} duration={600} /> Pending
+                  </span>
+                  <span>•</span>
+                  <span style={{ color: 'var(--success)', fontWeight: 700 }}>
+                    <i className="fa-solid fa-check" /> <AnimatedCounter end={stats.suratKeluarApproved} duration={600} /> Disetujui
+                  </span>
+                </div>
+              </div>
             </div>
-            <div style={styles.statValue}>{loading ? '…' : stats.suratKeluarCount}</div>
-            <div style={styles.statFooter}>
-              <span style={{ color: '#d97706', fontWeight: '600' }}>
-                ⏳ {stats.suratKeluarPending} Pending
-              </span>{' '}
-              •{' '}
-              <span style={{ color: '#16a34a', fontWeight: '600' }}>
-                ✓ {stats.suratKeluarApproved} Disetujui
-              </span>
-            </div>
-          </div>
 
-          {/* Card 3: Disposisi Surat */}
-          <div style={styles.statCard}>
-            <div style={styles.statHeader}>
-              <span style={styles.statIconPurple}>📋</span>
-              <span style={styles.statLabel}>Disposisi Surat</span>
-            </div>
-            <div style={styles.statValue}>{loading ? '…' : stats.disposisiCount}</div>
-            <div style={styles.statFooter}>
-              <span style={{ color: '#d97706', fontWeight: '600' }}>
-                ⏳ {stats.disposisiPending} Menunggu Tindakan
-              </span>
+            {/* Card 3: Disposisi Surat */}
+            <div className="glass-card stat-card" style={{ '--stat-accent': 'var(--accent-orange-gradient)', '--stat-bg': 'var(--accent-orange-light)', '--stat-color': 'var(--accent-orange)' }}>
+              <div>
+                <div className="stat-icon-wrapper" style={{ marginBottom: '0.75rem' }}>
+                  <i className="fa-solid fa-clipboard-list" />
+                </div>
+                <div style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-muted)' }}>Disposisi Surat</div>
+                <div style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--text-main)', margin: '0.2rem 0' }}>
+                  <AnimatedCounter end={stats.disposisiCount} duration={800} />
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--warning)', fontWeight: 700 }}>
+                  <i className="fa-solid fa-clock" /> <AnimatedCounter end={stats.disposisiPending} duration={600} /> Menunggu Tindakan
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Activity Section Grid (2 Columns) */}
-        <div style={styles.activityGrid}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }} className="animate-fade-in animate-delay-2">
           {/* Recent Surat Masuk */}
-          <div style={styles.activityCard}>
-            <div style={styles.activityHeader}>
-              <h3 style={styles.activityTitle}>📥 Surat Masuk Terbaru</h3>
-              <Link to="/surat-masuk" style={styles.viewAllLink}>
+          <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <i className="fa-solid fa-inbox" style={{ color: 'var(--primary)' }} /> Surat Masuk Terbaru
+              </h3>
+              <Link to="/surat-masuk" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }}>
                 Lihat Semua →
               </Link>
             </div>
+
             {loading ? (
-              <div style={styles.loadingText}>Memuat data…</div>
+              <LoadingSpinner variant="inline" text="Memuat surat masuk…" />
             ) : recentSuratMasuk.length === 0 ? (
-              <div style={styles.emptyText}>Belum ada data surat masuk.</div>
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Belum ada data surat masuk.</div>
             ) : (
-              <div style={styles.listGroup}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {recentSuratMasuk.map((item) => (
-                  <div key={item.id} style={styles.listItem}>
-                    <div style={{ flex: 1 }}>
-                      <Link to={`/surat-masuk/${item.id}`} style={styles.itemTitle}>
+                  <div key={item.id} style={{ padding: '0.875rem 1rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.75)', border: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Link to={`/surat-masuk/${item.id}`} style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)', textDecoration: 'none', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                         {item.nomor_surat}
                       </Link>
-                      <div style={styles.itemSub}>{item.perihal}</div>
-                      <div style={styles.itemMeta}>Asal: {item.asal_surat}</div>
+                      <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{item.perihal}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '2px' }}>Asal: {item.asal_surat}</div>
                     </div>
-                    <span style={styles.itemDate}>{formatDate(item.tanggal_surat)}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', whiteSpace: 'nowrap', fontWeight: 600 }}>{formatDate(item.tanggal_surat)}</span>
                   </div>
                 ))}
               </div>
@@ -189,31 +217,34 @@ export default function Dashboard() {
           </div>
 
           {/* Recent Surat Keluar */}
-          <div style={styles.activityCard}>
-            <div style={styles.activityHeader}>
-              <h3 style={styles.activityTitle}>📤 Surat Keluar Terbaru</h3>
-              <Link to="/surat-keluar" style={styles.viewAllLink}>
+          <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <i className="fa-solid fa-paper-plane" style={{ color: 'var(--success)' }} /> Surat Keluar Terbaru
+              </h3>
+              <Link to="/surat-keluar" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }}>
                 Lihat Semua →
               </Link>
             </div>
+
             {loading ? (
-              <div style={styles.loadingText}>Memuat data…</div>
+              <LoadingSpinner variant="inline" text="Memuat surat keluar…" />
             ) : recentSuratKeluar.length === 0 ? (
-              <div style={styles.emptyText}>Belum ada data surat keluar.</div>
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Belum ada data surat keluar.</div>
             ) : (
-              <div style={styles.listGroup}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {recentSuratKeluar.map((item) => (
-                  <div key={item.id} style={styles.listItem}>
-                    <div style={{ flex: 1 }}>
-                      <Link to={`/surat-keluar/${item.id}`} style={styles.itemTitle}>
+                  <div key={item.id} style={{ padding: '0.875rem 1rem', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.75)', border: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Link to={`/surat-keluar/${item.id}`} style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)', textDecoration: 'none', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                         {item.nomor_surat || 'Draft Surat Keluar'}
                       </Link>
-                      <div style={styles.itemSub}>{item.perihal}</div>
-                      <div style={styles.itemMeta}>Tujuan: {item.tujuan_surat}</div>
+                      <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{item.perihal}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '2px' }}>Tujuan: {item.tujuan_surat}</div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                       {getApprovalBadge(item.status_approval)}
-                      <span style={styles.itemDate}>{formatDate(item.tanggal_surat)}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', whiteSpace: 'nowrap', fontWeight: 600 }}>{formatDate(item.tanggal_surat)}</span>
                     </div>
                   </div>
                 ))}
@@ -225,169 +256,3 @@ export default function Dashboard() {
     </Layout>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.75rem',
-  },
-  welcomeCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '1.5rem 2rem',
-    border: '1px solid #e2e8f0',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    flexWrap: 'wrap',
-    gap: '1rem',
-  },
-  welcomeText: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  welcomeTitle: { fontSize: '1.35rem', fontWeight: '700', color: '#1e293b', margin: 0 },
-  welcomeSub: { fontSize: '0.875rem', color: '#64748b', margin: 0 },
-  userBadgeBox: { display: 'flex', gap: '6px', alignItems: 'center' },
-  userBadgeRole: {
-    backgroundColor: '#eff6ff',
-    color: '#2563eb',
-    border: '1px solid #bfdbfe',
-    padding: '4px 12px',
-    borderRadius: '20px',
-    fontSize: '0.8rem',
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  userBadgeJabatan: {
-    backgroundColor: '#f1f5f9',
-    color: '#475569',
-    padding: '4px 12px',
-    borderRadius: '20px',
-    fontSize: '0.8rem',
-    fontWeight: '500',
-  },
-  quickActions: {
-    display: 'flex',
-    gap: '1rem',
-    flexWrap: 'wrap',
-  },
-  quickBtnPrimary: {
-    padding: '0.65rem 1.25rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    borderRadius: '8px',
-    textDecoration: 'none',
-    fontWeight: '600',
-    fontSize: '0.875rem',
-  },
-  quickBtnSecondary: {
-    padding: '0.65rem 1.25rem',
-    backgroundColor: '#059669',
-    color: 'white',
-    borderRadius: '8px',
-    textDecoration: 'none',
-    fontWeight: '600',
-    fontSize: '0.875rem',
-  },
-  quickBtnInfo: {
-    padding: '0.65rem 1.25rem',
-    backgroundColor: '#7c3aed',
-    color: 'white',
-    borderRadius: '8px',
-    textDecoration: 'none',
-    fontWeight: '600',
-    fontSize: '0.875rem',
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '1.25rem',
-  },
-  statCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '1.25rem 1.5rem',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  statHeader: { display: 'flex', alignItems: 'center', gap: '8px' },
-  statIconBlue: {
-    fontSize: '1.2rem',
-    backgroundColor: '#eff6ff',
-    padding: '6px',
-    borderRadius: '8px',
-  },
-  statIconGreen: {
-    fontSize: '1.2rem',
-    backgroundColor: '#ecfdf5',
-    padding: '6px',
-    borderRadius: '8px',
-  },
-  statIconPurple: {
-    fontSize: '1.2rem',
-    backgroundColor: '#f5f3ff',
-    padding: '6px',
-    borderRadius: '8px',
-  },
-  statLabel: { fontSize: '0.85rem', fontWeight: '600', color: '#64748b' },
-  statValue: { fontSize: '2rem', fontWeight: '800', color: '#1e293b' },
-  statFooter: { fontSize: '0.75rem', color: '#94a3b8' },
-  activityGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-    gap: '1.5rem',
-  },
-  activityCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    padding: '1.5rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  activityHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid #f1f5f9',
-    paddingBottom: '0.75rem',
-  },
-  activityTitle: { fontSize: '1rem', fontWeight: '700', color: '#1e293b', margin: 0 },
-  viewAllLink: { color: '#2563eb', textDecoration: 'none', fontSize: '0.8rem', fontWeight: '600' },
-  loadingText: { textAlign: 'center', padding: '1.5rem', color: '#94a3b8', fontSize: '0.85rem' },
-  emptyText: { textAlign: 'center', padding: '1.5rem', color: '#94a3b8', fontSize: '0.85rem' },
-  listGroup: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
-  listItem: {
-    padding: '0.75rem',
-    borderRadius: '8px',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #f1f5f9',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: '0.75rem',
-  },
-  itemTitle: {
-    fontSize: '0.875rem',
-    fontWeight: '700',
-    color: '#1e293b',
-    textDecoration: 'none',
-  },
-  itemSub: { fontSize: '0.8rem', color: '#475569', marginTop: '2px' },
-  itemMeta: { fontSize: '0.75rem', color: '#64748b', marginTop: '2px' },
-  itemDate: { fontSize: '0.75rem', color: '#94a3b8', whiteSpace: 'nowrap' },
-  badge: {
-    padding: '2px 8px',
-    borderRadius: '10px',
-    fontSize: '0.7rem',
-    fontWeight: '600',
-  },
-  badgePending: { backgroundColor: '#fef9c3', color: '#a16207' },
-  badgeApproved: { backgroundColor: '#dcfce7', color: '#15803d' },
-  badgeRejected: { backgroundColor: '#fee2e2', color: '#b91c1c' },
-};

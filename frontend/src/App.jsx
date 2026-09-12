@@ -12,16 +12,22 @@ import SuratKeluarForm from './pages/SuratKeluar/SuratKeluarForm';
 import SuratKeluarDetail from './pages/SuratKeluar/SuratKeluarDetail';
 import ArsipList from './pages/Arsip/ArsipList';
 
+import { ToastProvider } from './context/ToastContext';
+import ErrorBoundary from './components/ErrorBoundary';
+
 // Guard: redirect ke /login jika belum terautentikasi
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('access_token');
-  return token ? children : <Navigate to="/login" replace />;
+  const isValid = token && token !== 'undefined' && token !== 'null';
+  return isValid ? children : <Navigate to="/login" replace />;
 }
 
 function App() {
   return (
-    <Router>
-      <Routes>
+    <ErrorBoundary>
+      <ToastProvider>
+        <Router>
+        <Routes>
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -53,6 +59,8 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
+    </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

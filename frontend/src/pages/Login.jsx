@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../services/api';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { useToast } from '../context/ToastContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -28,126 +32,85 @@ export default function Login() {
       }
       localStorage.setItem('user', JSON.stringify(data.data.user));
 
+      addToast(`Selamat datang kembali, ${data.data.user.full_name}!`, 'success');
+
       // Redirect ke dashboard
       navigate('/');
     } catch (err) {
       setError(err.message);
+      addToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Login Surat App</h2>
-        {error && <div style={styles.error}>{error}</div>}
-        <form onSubmit={handleLogin} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Email</label>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: 'var(--bg-app-gradient)' }}>
+      <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem 2rem', border: '1px solid var(--border-glass)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div className="sidebar-brand-icon" style={{ margin: '0 auto 1rem', width: '60px', height: '60px', fontSize: '1.85rem', background: 'var(--accent-orange-gradient)' }}>
+            <i className="fa-solid fa-envelope-open-text" />
+          </div>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.25rem', color: 'var(--primary)' }}>Login Surat App</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Sistem Tata Kelola Persuratan Digital</p>
+        </div>
+
+        {error && (
+          <div className="badge badge-danger" style={{ width: '100%', padding: '0.75rem 1rem', marginBottom: '1.25rem', justifyContent: 'center', borderRadius: 'var(--radius-md)', fontSize: '0.85rem' }}>
+            <i className="fa-solid fa-circle-exclamation" style={{ marginRight: '0.4rem' }} /> {error}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">
+              <i className="fa-solid fa-envelope" style={{ color: 'var(--primary)' }} /> Email Instansi
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={styles.input}
+              autoFocus
+              className="input-field"
               placeholder="pegawai@instansi.go.id"
             />
           </div>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={styles.input}
-              placeholder="********"
-            />
+
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">
+              <i className="fa-solid fa-lock" style={{ color: 'var(--primary)' }} /> Password
+            </label>
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="input-field"
+                placeholder="********"
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                aria-label="Toggle Password Visibility"
+              >
+                <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+              </button>
+            </div>
           </div>
-          <button type="submit" disabled={loading} style={styles.button}>
-            {loading ? 'Memproses...' : 'Masuk'}
+
+          <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', padding: '0.85rem', marginTop: '0.5rem', fontSize: '0.95rem' }}>
+            {loading ? <><LoadingSpinner variant="button" /> Memproses...</> : <><i className="fa-solid fa-right-to-bracket" /> Masuk</>}
           </button>
         </form>
-        <div style={styles.footer}>
-          Belum punya akun? <Link to="/register" style={styles.link}>Daftar di sini</Link>
+
+        <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+          Belum punya akun? <Link to="/register" style={{ color: 'var(--accent-orange)', fontWeight: 700 }}>Daftar di sini</Link>
         </div>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    backgroundColor: '#f3f4f6',
-    fontFamily: 'sans-serif'
-  },
-  card: {
-    backgroundColor: '#fff',
-    padding: '2rem',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-    width: '100%',
-    maxWidth: '400px'
-  },
-  title: {
-    marginTop: 0,
-    marginBottom: '1.5rem',
-    textAlign: 'center',
-    color: '#1f2937'
-  },
-  error: {
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    padding: '0.75rem',
-    borderRadius: '4px',
-    marginBottom: '1rem',
-    fontSize: '0.875rem'
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem'
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem'
-  },
-  label: {
-    fontSize: '0.875rem',
-    fontWeight: '500',
-    color: '#4b5563'
-  },
-  input: {
-    padding: '0.75rem',
-    borderRadius: '4px',
-    border: '1px solid #d1d5db',
-    fontSize: '1rem'
-  },
-  button: {
-    padding: '0.75rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '1rem',
-    fontWeight: '500',
-    cursor: 'pointer',
-    marginTop: '0.5rem'
-  },
-  footer: {
-    marginTop: '1.5rem',
-    textAlign: 'center',
-    fontSize: '0.875rem',
-    color: '#6b7280'
-  },
-  link: {
-    color: '#2563eb',
-    textDecoration: 'none'
-  }
-};
