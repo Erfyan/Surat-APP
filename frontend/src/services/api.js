@@ -117,6 +117,28 @@ export const getUsers = async () => {
   return handleResponse(res, makeRequest);
 };
 
+export const updateUserProfile = async (profileData) => {
+  const makeRequest = () =>
+    fetch(`${API_URL}/api/auth/profile`, {
+      method: 'PUT',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileData),
+    });
+  const res = await makeRequest();
+  return handleResponse(res, makeRequest);
+};
+
+export const changeUserPassword = async (passwordData) => {
+  const makeRequest = () =>
+    fetch(`${API_URL}/api/auth/change-password`, {
+      method: 'PUT',
+      headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(passwordData),
+    });
+  const res = await makeRequest();
+  return handleResponse(res, makeRequest);
+};
+
 // ─── Surat Masuk API ─────────────────────────────────────────────────────────
 
 export const getSuratMasuk = async (params = {}) => {

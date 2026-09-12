@@ -11,6 +11,7 @@ import SuratKeluarList from './pages/SuratKeluar/SuratKeluarList';
 import SuratKeluarForm from './pages/SuratKeluar/SuratKeluarForm';
 import SuratKeluarDetail from './pages/SuratKeluar/SuratKeluarDetail';
 import ArsipList from './pages/Arsip/ArsipList';
+import Settings from './pages/Settings/Settings';
 
 import { ToastProvider } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -54,6 +55,9 @@ function App() {
 
         {/* Arsip & Laporan */}
         <Route path="/arsip" element={<PrivateRoute><ArsipList /></PrivateRoute>} />
+
+        {/* Pengaturan Lengkap */}
+        <Route path="/pengaturan" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -225,11 +225,125 @@ const refreshTokenController = async (req, res) => {
   }
 };
 
+/**
+ * Controller: Update Profile
+ * PUT /api/auth/profile
+ */
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { full_name, jabatan } = req.body;
+
+    if (!full_name || !full_name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nama lengkap wajib diisi',
+      });
+    }
+
+    // 1. Update profiles table
+    const { data: updatedProfile, error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        full_name: full_name.trim(),
+        jabatan: jabatan ? jabatan.trim() : null,
+      })
+      .eq('id', userId)
+      .select('id, full_name, role, jabatan')
+      .single();
+
+    if (profileError) {
+      console.error('[UPDATE_PROFILE_ERROR]:', profileError.message);
+      throw profileError;
+    }
+
+    // 2. Update user_metadata in Supabase Auth
+    await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { full_name: full_name.trim() },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profil pengguna berhasil diperbarui',
+      data: {
+        user: {
+          id: userId,
+          email: req.user.email,
+          full_name: updatedProfile.full_name,
+          role: updatedProfile.role,
+          jabatan: updatedProfile.jabatan,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('[UPDATE_PROFILE_EXCEPTION]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Gagal memperbarui profil: ' + (error.message || 'Error server'),
+    });
+  }
+};
+
+/**
+ * Controller: Change Password
+ * PUT /api/auth/change-password
+ */
+const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { new_password, current_password } = req.body;
+
+    if (!new_password || new_password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password baru minimal 6 karakter',
+      });
+    }
+
+    // Verifikasi password lama jika dikirim
+    if (current_password) {
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: req.user.email,
+        password: current_password,
+      });
+
+      if (verifyError) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password lama Anda tidak sesuai',
+        });
+      }
+    }
+
+    // Update password via Supabase Admin API
+    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+      password: new_password,
+    });
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Kata sandi berhasil diperbarui',
+    });
+  } catch (error) {
+    console.error('[CHANGE_PASSWORD_ERROR]:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Gagal mengubah kata sandi: ' + (error.message || 'Error server'),
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   getUsers,
   refreshTokenController,
+  updateProfile,
+  changePassword,
 };
 

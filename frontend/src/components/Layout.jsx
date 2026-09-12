@@ -22,6 +22,7 @@ export default function Layout({ children, title }) {
     { path: '/disposisi', label: 'Disposisi', icon: <i className="fa-solid fa-clipboard-list" /> },
     { path: '/surat-keluar', label: 'Surat Keluar', icon: <i className="fa-solid fa-paper-plane" /> },
     { path: '/arsip', label: 'Arsip & Laporan', icon: <i className="fa-solid fa-box-archive" /> },
+    { path: '/pengaturan', label: 'Pengaturan', icon: <i className="fa-solid fa-gear" /> },
   ];
 
   const mobileNavItems = [
@@ -30,6 +31,7 @@ export default function Layout({ children, title }) {
     { path: '/disposisi', label: 'Tugas', icon: 'fa-solid fa-clipboard-list' },
     { path: '/surat-keluar', label: 'Keluar', icon: 'fa-solid fa-paper-plane' },
     { path: '/arsip', label: 'Arsip', icon: 'fa-solid fa-box-archive' },
+    { path: '/pengaturan', label: 'Setelan', icon: 'fa-solid fa-gear' },
   ];
 
   return (
@@ -92,6 +94,9 @@ export default function Layout({ children, title }) {
 
           {/* Mobile: show user avatar + logout in header */}
           <div className="mobile-header-actions">
+            <NavLink to="/pengaturan" className="btn btn-ghost btn-sm" style={{ color: 'var(--text-main)', padding: '0.35rem' }} aria-label="Pengaturan">
+              <i className="fa-solid fa-gear" />
+            </NavLink>
             <div className="user-avatar" style={{ width: 32, height: 32, fontSize: '0.8rem' }}>
               {user.full_name?.[0]?.toUpperCase() || 'U'}
             </div>
@@ -100,8 +105,12 @@ export default function Layout({ children, title }) {
             </button>
           </div>
 
-          {/* Desktop: empty right side (user info is in sidebar) */}
-          <div className="desktop-header-actions" />
+          {/* Desktop: quick link to settings */}
+          <div className="desktop-header-actions">
+            <NavLink to="/pengaturan" className="btn btn-ghost btn-sm" style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.825rem' }}>
+              <i className="fa-solid fa-gear" /> Pengaturan
+            </NavLink>
+          </div>
         </header>
 
         {/* Content Body */}

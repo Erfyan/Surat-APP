@@ -18,5 +18,11 @@ router.get('/me', verifyToken, authController.getMe);
 // GET /api/auth/users - Dapatkan daftar pengguna (Protected)
 router.get('/users', verifyToken, authController.getUsers);
 
+// PUT /api/auth/profile - Perbarui profil pengguna (Protected)
+router.put('/profile', verifyToken, authController.updateProfile);
+
+// PUT /api/auth/change-password - Ganti kata sandi pengguna (Protected)
+router.put('/change-password', verifyToken, authController.changePassword);
+
 module.exports = router;
 
