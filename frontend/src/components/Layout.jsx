@@ -31,7 +31,6 @@ export default function Layout({ children, title }) {
     { path: '/disposisi', label: 'Tugas', icon: 'fa-solid fa-clipboard-list' },
     { path: '/surat-keluar', label: 'Keluar', icon: 'fa-solid fa-paper-plane' },
     { path: '/arsip', label: 'Arsip', icon: 'fa-solid fa-box-archive' },
-    { path: '/pengaturan', label: 'Setelan', icon: 'fa-solid fa-gear' },
   ];
 
   return (
@@ -92,15 +91,26 @@ export default function Layout({ children, title }) {
             <h1 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }} className="title-gradient">{title}</h1>
           </div>
 
-          {/* Mobile: show user avatar + logout in header */}
-          <div className="mobile-header-actions">
-            <NavLink to="/pengaturan" className="btn btn-ghost btn-sm" style={{ color: 'var(--text-main)', padding: '0.35rem' }} aria-label="Pengaturan">
+          {/* Mobile: show settings button + user avatar + logout in top header */}
+          <div className="mobile-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <NavLink
+              to="/pengaturan"
+              className={({ isActive }) => `btn btn-ghost btn-sm ${isActive ? 'active' : ''}`}
+              style={({ isActive }) => ({
+                color: isActive ? 'var(--primary)' : 'var(--text-main)',
+                background: isActive ? 'rgba(29, 78, 216, 0.1)' : 'transparent',
+                padding: '0.4rem 0.6rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.95rem',
+              })}
+              aria-label="Pengaturan"
+            >
               <i className="fa-solid fa-gear" />
             </NavLink>
             <div className="user-avatar" style={{ width: 32, height: 32, fontSize: '0.8rem' }}>
               {user.full_name?.[0]?.toUpperCase() || 'U'}
             </div>
-            <button onClick={handleLogout} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '0.35rem' }} aria-label="Logout">
+            <button onClick={handleLogout} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '0.4rem' }} aria-label="Logout">
               <i className="fa-solid fa-right-from-bracket" />
             </button>
           </div>
