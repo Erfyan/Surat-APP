@@ -7,6 +7,8 @@ const disposisiRoutes = require('./routes/disposisiRoutes');
 const suratKeluarRoutes = require('./routes/suratKeluarRoutes');
 const arsipRoutes = require('./routes/arsipRoutes');
 
+const { preventDuplicateRequests, apiRateLimiter } = require('./middleware/rateLimiter');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -14,6 +16,10 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Anti-Spam & Rate Limiter Middleware
+app.use(apiRateLimiter(200, 60000));
+app.use(preventDuplicateRequests(1500));
 
 // Routing API
 app.use('/api/auth', authRoutes);
