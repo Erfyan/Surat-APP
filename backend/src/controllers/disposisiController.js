@@ -1,6 +1,26 @@
 const supabase = require('../config/supabaseClient');
 
 /**
+ * Helper function untuk memformat item disposisi
+ */
+const formatDisposisiItem = (item) => {
+  if (!item) return item;
+  return {
+    ...item,
+    pengirim_id: item.pengirim_id || item.dari_user_id,
+    penerima_id: item.penerima_id || item.ke_user_id,
+    sifat: item.sifat || 'Biasa',
+    batas_waktu: item.batas_waktu || null,
+    surat_masuk: item.surat_masuk
+      ? {
+          ...item.surat_masuk,
+          asal_surat: item.surat_masuk.asal_surat || item.surat_masuk.pengirim || '-',
+        }
+      : null,
+  };
+};
+
+/**
  * Controller: Mendapatkan daftar disposisi
  * GET /api/disposisi
  * Query params opsional: ?surat_masuk_id=xxx
@@ -13,9 +33,9 @@ const getAll = async (req, res) => {
       .from('disposisi')
       .select(`
         *,
-        surat_masuk:surat_masuk_id(id, nomor_surat, perihal, asal_surat, tanggal_surat),
-        pengirim:profiles!pengirim_id(id, full_name, role, jabatan),
-        penerima:profiles!penerima_id(id, full_name, role, jabatan)
+        surat_masuk:surat_masuk_id(id, nomor_surat, perihal, pengirim, tanggal_surat),
+        pengirim:profiles!dari_user_id(id, full_name, role, jabatan),
+        penerima:profiles!ke_user_id(id, full_name, role, jabatan)
       `)
       .order('created_at', { ascending: false });
 
@@ -27,10 +47,12 @@ const getAll = async (req, res) => {
 
     if (error) throw error;
 
+    const formattedData = (data || []).map(formatDisposisiItem);
+
     return res.status(200).json({
       success: true,
       message: 'Berhasil mengambil data disposisi',
-      data,
+      data: formattedData,
     });
   } catch (error) {
     console.error('[GET_ALL_DISPOSISI_ERROR]:', error);
@@ -53,19 +75,21 @@ const getBySuratId = async (req, res) => {
       .from('disposisi')
       .select(`
         *,
-        surat_masuk:surat_masuk_id(id, nomor_surat, perihal, asal_surat, tanggal_surat),
-        pengirim:profiles!pengirim_id(id, full_name, role, jabatan),
-        penerima:profiles!penerima_id(id, full_name, role, jabatan)
+        surat_masuk:surat_masuk_id(id, nomor_surat, perihal, pengirim, tanggal_surat),
+        pengirim:profiles!dari_user_id(id, full_name, role, jabatan),
+        penerima:profiles!ke_user_id(id, full_name, role, jabatan)
       `)
       .eq('surat_masuk_id', suratMasukId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
+    const formattedData = (data || []).map(formatDisposisiItem);
+
     return res.status(200).json({
       success: true,
       message: 'Berhasil mengambil disposisi surat masuk',
-      data,
+      data: formattedData,
     });
   } catch (error) {
     console.error('[GET_DISPOSISI_BY_SURAT_ERROR]:', error);
@@ -88,9 +112,9 @@ const getById = async (req, res) => {
       .from('disposisi')
       .select(`
         *,
-        surat_masuk:surat_masuk_id(id, nomor_surat, perihal, asal_surat, tanggal_surat),
-        pengirim:profiles!pengirim_id(id, full_name, role, jabatan),
-        penerima:profiles!penerima_id(id, full_name, role, jabatan)
+        surat_masuk:surat_masuk_id(id, nomor_surat, perihal, pengirim, tanggal_surat),
+        pengirim:profiles!dari_user_id(id, full_name, role, jabatan),
+        penerima:profiles!ke_user_id(id, full_name, role, jabatan)
       `)
       .eq('id', id)
       .single();
@@ -105,7 +129,7 @@ const getById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Berhasil mengambil detail disposisi',
-      data,
+      data: formatDisposisiItem(data),
     });
   } catch (error) {
     console.error('[GET_DISPOSISI_BY_ID_ERROR]:', error);
@@ -131,25 +155,23 @@ const create = async (req, res) => {
       });
     }
 
+    const insertPayload = {
+      surat_masuk_id,
+      dari_user_id: req.user.id,
+      ke_user_id: penerima_id,
+      instruksi,
+      catatan: catatan || null,
+      status: status || 'Menunggu',
+    };
+
     const { data, error } = await supabase
       .from('disposisi')
-      .insert([
-        {
-          surat_masuk_id,
-          pengirim_id: req.user.id,
-          penerima_id,
-          sifat: sifat || 'Biasa',
-          instruksi,
-          catatan: catatan || null,
-          batas_waktu: batas_waktu || null,
-          status: status || 'Menunggu',
-        },
-      ])
+      .insert([insertPayload])
       .select(`
         *,
         surat_masuk:surat_masuk_id(id, nomor_surat, perihal),
-        pengirim:profiles!pengirim_id(id, full_name, role, jabatan),
-        penerima:profiles!penerima_id(id, full_name, role, jabatan)
+        pengirim:profiles!dari_user_id(id, full_name, role, jabatan),
+        penerima:profiles!ke_user_id(id, full_name, role, jabatan)
       `)
       .single();
 
@@ -158,7 +180,7 @@ const create = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: 'Disposisi berhasil dibuat',
-      data,
+      data: formatDisposisiItem(data),
     });
   } catch (error) {
     console.error('[CREATE_DISPOSISI_ERROR]:', error);
@@ -179,11 +201,9 @@ const update = async (req, res) => {
     const { penerima_id, sifat, instruksi, catatan, batas_waktu, status } = req.body;
 
     const updatePayload = {};
-    if (penerima_id !== undefined) updatePayload.penerima_id = penerima_id;
-    if (sifat !== undefined) updatePayload.sifat = sifat;
+    if (penerima_id !== undefined) updatePayload.ke_user_id = penerima_id;
     if (instruksi !== undefined) updatePayload.instruksi = instruksi;
     if (catatan !== undefined) updatePayload.catatan = catatan;
-    if (batas_waktu !== undefined) updatePayload.batas_waktu = batas_waktu || null;
     if (status !== undefined) updatePayload.status = status;
 
     const { data, error } = await supabase
@@ -193,8 +213,8 @@ const update = async (req, res) => {
       .select(`
         *,
         surat_masuk:surat_masuk_id(id, nomor_surat, perihal),
-        pengirim:profiles!pengirim_id(id, full_name, role, jabatan),
-        penerima:profiles!penerima_id(id, full_name, role, jabatan)
+        pengirim:profiles!dari_user_id(id, full_name, role, jabatan),
+        penerima:profiles!ke_user_id(id, full_name, role, jabatan)
       `)
       .single();
 
@@ -203,7 +223,7 @@ const update = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Disposisi berhasil diperbarui',
-      data,
+      data: formatDisposisiItem(data),
     });
   } catch (error) {
     console.error('[UPDATE_DISPOSISI_ERROR]:', error);

@@ -30,7 +30,10 @@ const getAll = async (req, res) => {
 
     if (error) throw error;
 
-    let result = data || [];
+    let result = (data || []).map((item) => ({
+      ...item,
+      asal_surat: item.asal_surat || item.pengirim || '-',
+    }));
 
     if (search) {
       const q = search.toLowerCase();
@@ -38,6 +41,7 @@ const getAll = async (req, res) => {
         (s) =>
           s.nomor_surat?.toLowerCase().includes(q) ||
           s.asal_surat?.toLowerCase().includes(q) ||
+          s.pengirim?.toLowerCase().includes(q) ||
           s.perihal?.toLowerCase().includes(q)
       );
     }
