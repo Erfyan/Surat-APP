@@ -4,6 +4,77 @@ import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useToast } from '../../context/ToastContext';
 import { updateUserProfile, changeUserPassword } from '../../services/api';
 
+const PRESETS = {
+  pemerintah: {
+    orgType: 'pemerintahan',
+    parentName: 'PEMERINTAH KABUPATEN BOGOR',
+    name: 'DINAS KOMUNIKASI DAN INFORMATIKA',
+    subUnit: 'SEKRETARIAT & TATA USAHA PERSURATAN',
+    tagline: 'Mewujudkan Tata Kelola Pemerintahan Berbasis Elektronik yang Akuntabel',
+    address: 'Jl. Merdeka No. 45, Kompleks Perkantoran Pemerintah Daerah',
+    city: 'Kab. Bogor, Jawa Barat 16911',
+    phone: '(021) 555-0199',
+    email: 'sekretariat@diskominfo.bogorkab.go.id',
+    website: 'https://diskominfo.bogorkab.go.id',
+    defaultLetterCode: 'DISKOMINFO',
+    logoIcon: 'fa-landmark',
+  },
+  perusahaan: {
+    orgType: 'perusahaan',
+    parentName: 'HOLDING GROUP NUSANTARA',
+    name: 'PT DIGITAL INOVASI KREATIF',
+    subUnit: 'DIVISI OPERASIONAL & KORESPONDENSI BISNIS',
+    tagline: 'Solusi Terdepan Ekosistem Teknologi & Layanan Digital Terintegrasi',
+    address: 'Gedung Cyber Tower Lt. 18, Jl. H.R. Rasuna Said Kav. X-5',
+    city: 'Jakarta Selatan, DKI Jakarta 12950',
+    phone: '(021) 8088-9900',
+    email: 'corporate.secretary@digitalinovasi.co.id',
+    website: 'https://digitalinovasi.co.id',
+    defaultLetterCode: 'DIK-CORP',
+    logoIcon: 'fa-briefcase',
+  },
+  pendidikan: {
+    orgType: 'pendidikan',
+    parentName: 'YAYASAN PENDIDIKAN BINA BANGSA',
+    name: 'UNIVERSITAS TEKNOLOGI NUSANTARA',
+    subUnit: 'FAKULTAS ILMU KOMPUTER & TEKNOLOGI INFORMASI',
+    tagline: 'Unggul dalam Riset, Berkarakter Luhur, dan Berdaya Saing Global',
+    address: 'Kampus Terpadu, Jl. Pendidikan Karakter No. 100',
+    city: 'Kota Bandung, Jawa Barat 40132',
+    phone: '(022) 720-4321',
+    email: 'dekanat.fik@utn.ac.id',
+    website: 'https://utn.ac.id',
+    defaultLetterCode: 'UTN-FIK',
+    logoIcon: 'fa-graduation-cap',
+  },
+  yayasan: {
+    orgType: 'yayasan',
+    parentName: 'DEWAN PEMBINA PUSAT',
+    name: 'YAYASAN KARYA PEDULI INDONESIA',
+    subUnit: 'SEKRETARIAT JENDERAL & PELAYANAN SOSIAL',
+    tagline: 'Bergerak Bersama Membangun Kesejahteraan Masyarakat Nusantara',
+    address: 'Jl. Surya Kencana No. 88, Graha Kepedulian',
+    city: 'Kota Surabaya, Jawa Timur 60271',
+    phone: '(031) 567-8910',
+    email: 'sekretariat@karyapeduli.org',
+    website: 'https://karyapeduli.org',
+    defaultLetterCode: 'YKPI-SKR',
+    logoIcon: 'fa-hand-holding-heart',
+  },
+};
+
+const LOGO_ICONS = [
+  { id: 'fa-building-columns', label: 'Gedung Instansi' },
+  { id: 'fa-landmark', label: 'Pemerintahan / Dinas' },
+  { id: 'fa-briefcase', label: 'Perusahaan / Bisnis' },
+  { id: 'fa-graduation-cap', label: 'Sekolah / Kampus' },
+  { id: 'fa-hand-holding-heart', label: 'Yayasan / Sosial' },
+  { id: 'fa-shield-halved', label: 'Keamanan / Hukum' },
+  { id: 'fa-hospital', label: 'Kesehatan / RS' },
+  { id: 'fa-users', label: 'Organisasi / Ormas' },
+  { id: 'fa-feather-pointed', label: 'Persuratan Klasik' },
+];
+
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [user, setUser] = useState(null);
@@ -21,15 +92,8 @@ export default function Settings() {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  // Tab Identitas Instansi State
-  const [institution, setInstitution] = useState({
-    name: 'Dinas Komunikasi dan Informatika',
-    address: 'Jl. Merdeka No. 45, Kompleks Perkantoran Pemerintah',
-    phone: '(021) 555-0199',
-    email: 'sekretariat@instansi.go.id',
-    website: 'https://instansi.go.id',
-    defaultLetterCode: 'DISKOMINFO',
-  });
+  // Tab Identitas Instansi / Organisasi State
+  const [institution, setInstitution] = useState(PRESETS.pemerintah);
   const [instLoading, setInstLoading] = useState(false);
 
   // Tab Preferensi State
@@ -52,7 +116,8 @@ export default function Settings() {
     const storedInst = localStorage.getItem('app_institution_settings');
     if (storedInst) {
       try {
-        setInstitution(JSON.parse(storedInst));
+        const parsed = JSON.parse(storedInst);
+        setInstitution((prev) => ({ ...prev, ...parsed }));
       } catch (e) {
         console.error(e);
       }
@@ -142,17 +207,29 @@ export default function Settings() {
     }
   };
 
-  // 3. Simpan Identitas Instansi
+  // 3. Simpan Identitas Instansi / Organisasi
   const handleSaveInstitution = (e) => {
     e.preventDefault();
+    if (!institution.name || !institution.name.trim()) {
+      addToast('Nama utama organisasi/instansi wajib diisi', 'warning');
+      return;
+    }
+
     setInstLoading(true);
     try {
       localStorage.setItem('app_institution_settings', JSON.stringify(institution));
-      addToast('Data identitas instansi berhasil disimpan!', 'success');
+      addToast('Identitas instansi/organisasi berhasil disimpan!', 'success');
     } catch (err) {
       addToast('Gagal menyimpan identitas instansi', 'error');
     } finally {
       setInstLoading(false);
+    }
+  };
+
+  const applyPreset = (presetKey) => {
+    if (PRESETS[presetKey]) {
+      setInstitution(PRESETS[presetKey]);
+      addToast(`Template ${PRESETS[presetKey].name} berhasil diterapkan!`, 'info');
     }
   };
 
@@ -167,7 +244,7 @@ export default function Settings() {
   const tabs = [
     { id: 'profile', label: 'Profil Akun', icon: 'fa-user' },
     { id: 'security', label: 'Keamanan & Sandi', icon: 'fa-shield-halved' },
-    { id: 'institution', label: 'Identitas Instansi', icon: 'fa-building-columns' },
+    { id: 'institution', label: 'Identitas Instansi / Organisasi', icon: 'fa-building-columns' },
     { id: 'preferences', label: 'Preferensi & Sistem', icon: 'fa-sliders' },
   ];
 
@@ -200,42 +277,54 @@ export default function Settings() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
-                whiteSpace: 'nowrap',
+                fontWeight: activeTab === tab.id ? 700 : 500,
+                transition: 'all 0.2s ease',
               }}
             >
-              <i className={`fa-solid ${tab.icon}`} /> {tab.label}
+              <i className={`fa-solid ${tab.icon}`} />
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
 
         {/* Tab 1: Profil Akun */}
         {activeTab === 'profile' && (
-          <div className="glass-card animate-fade-in" style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
+          <div className="glass-card animate-fade-in" style={{ padding: '2rem', maxWidth: '650px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.75rem' }}>
               <div
-                className="user-avatar"
-                style={{ width: '64px', height: '64px', fontSize: '1.6rem', background: 'var(--primary-gradient)' }}
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: 'var(--primary-gradient)',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.5rem',
+                  fontWeight: 800,
+                  boxShadow: '0 4px 12px rgba(29, 78, 216, 0.25)',
+                }}
               >
-                {user?.full_name?.[0]?.toUpperCase() || 'U'}
+                {fullName ? fullName.charAt(0).toUpperCase() : 'U'}
               </div>
               <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--primary)' }}>
-                  {user?.full_name || 'Nama Pengguna'}
-                </h2>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '4px' }}>
-                  {user?.email || 'email@instansi.go.id'}
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '8px' }}>
-                  <span className="badge badge-info">{user?.role || 'Staff'}</span>
-                  {user?.jabatan && <span className="badge badge-warning">{user?.jabatan}</span>}
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 0.25rem', color: 'var(--text-main)' }}>
+                  {fullName || 'Nama Pengguna'}
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="badge badge-primary" style={{ textTransform: 'uppercase', fontSize: '0.75rem' }}>
+                    <i className="fa-solid fa-user-shield" /> {user?.role || 'Staff'}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{user?.email || ''}</span>
                 </div>
               </div>
             </div>
 
-            <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '600px' }}>
+            <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div className="form-group" style={{ margin: 0 }}>
                 <label className="form-label">
-                  <i className="fa-solid fa-user" style={{ color: 'var(--primary)' }} /> Nama Lengkap
+                  <i className="fa-solid fa-id-card" style={{ color: 'var(--primary)' }} /> Nama Lengkap <span style={{ color: 'var(--danger)' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -243,7 +332,7 @@ export default function Settings() {
                   onChange={(e) => setFullName(e.target.value)}
                   required
                   className="input-field"
-                  placeholder="Nama Lengkap dan Gelar"
+                  placeholder="Masukkan nama lengkap"
                 />
               </div>
 
@@ -375,96 +464,351 @@ export default function Settings() {
           </div>
         )}
 
-        {/* Tab 3: Identitas Instansi */}
+        {/* Tab 3: Identitas Instansi / Organisasi (Ultra Fleksibel) */}
         {activeTab === 'institution' && (
-          <div className="glass-card animate-fade-in" style={{ padding: '2rem' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 0.4rem', color: 'var(--primary)' }}>
-                <i className="fa-solid fa-building-columns" /> Identitas Instansi & Kop Surat
-              </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
-                Informasi ini digunakan sebagai Kop Surat resmi pada cetak lembar disposisi dan rekapitulasi laporan arsip.
-              </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
+            {/* Form Input Identitas */}
+            <div className="glass-card animate-fade-in" style={{ padding: '2rem' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: 'var(--primary)' }}>
+                    <i className="fa-solid fa-building-columns" /> Identitas Organisasi & Kop
+                  </h3>
+                  <span className="badge badge-primary" style={{ fontSize: '0.75rem' }}>Fleksibel & Multi-Sektor</span>
+                </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.4rem 0 0' }}>
+                  Atur nama instansi, lembaga induk, slogan, kontak, dan logo untuk disesuaikan dengan jenis instansi atau organisasi Anda.
+                </p>
+              </div>
+
+              {/* Template Cepat (Preset Selector) */}
+              <div style={{ marginBottom: '1.5rem', padding: '1rem', borderRadius: 'var(--radius-md)', background: 'rgba(30, 58, 138, 0.04)', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <i className="fa-solid fa-wand-magic-sparkles" style={{ color: 'var(--accent-orange)' }} />
+                  Gunakan Contoh Template Cepat:
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('pemerintah')}
+                    className="btn btn-ghost"
+                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem', background: '#fff' }}
+                  >
+                    <i className="fa-solid fa-landmark" style={{ color: '#1d4ed8' }} /> Pemerintahan / Dinas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('perusahaan')}
+                    className="btn btn-ghost"
+                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem', background: '#fff' }}
+                  >
+                    <i className="fa-solid fa-briefcase" style={{ color: '#ea580c' }} /> Perusahaan / PT / Swasta
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('pendidikan')}
+                    className="btn btn-ghost"
+                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem', background: '#fff' }}
+                  >
+                    <i className="fa-solid fa-graduation-cap" style={{ color: '#059669' }} /> Sekolah / Universitas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('yayasan')}
+                    className="btn btn-ghost"
+                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem', background: '#fff' }}
+                  >
+                    <i className="fa-solid fa-hand-holding-heart" style={{ color: '#e11d48' }} /> Yayasan / LSM / Ormas
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveInstitution} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+                {/* Jenis Organisasi & Ikon Logo */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Jenis / Kategori Organisasi</label>
+                    <select
+                      value={institution.orgType || 'pemerintahan'}
+                      onChange={(e) => setInstitution({ ...institution, orgType: e.target.value })}
+                      className="input-field"
+                    >
+                      <option value="pemerintahan">Instansi Pemerintahan / Dinas</option>
+                      <option value="perusahaan">Perusahaan / Korporasi / PT / CV</option>
+                      <option value="pendidikan">Lembaga Pendidikan / Kampus / Sekolah</option>
+                      <option value="yayasan">Yayasan / Lembaga Sosial / LSM</option>
+                      <option value="organisasi">Organisasi Kemasyarakatan / Komunitas</option>
+                      <option value="lainnya">Lainnya / Kustom</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Ikon Logo Kop Surat</label>
+                    <select
+                      value={institution.logoIcon || 'fa-building-columns'}
+                      onChange={(e) => setInstitution({ ...institution, logoIcon: e.target.value })}
+                      className="input-field"
+                    >
+                      {LOGO_ICONS.map((icon) => (
+                        <option key={icon.id} value={icon.id}>
+                          {icon.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Tingkat 1: Lembaga Induk / Badan Pembina */}
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">
+                    Nama Lembaga Induk / Badan Pembina <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={institution.parentName || ''}
+                    onChange={(e) => setInstitution({ ...institution, parentName: e.target.value })}
+                    className="input-field"
+                    placeholder="Contoh: PEMERINTAH KABUPATEN BOGOR / YAYASAN AL-AZHAR"
+                  />
+                </div>
+
+                {/* Tingkat 2: Nama Utama Instansi/Organisasi */}
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">
+                    Nama Utama Instansi / Organisasi / Perusahaan <span style={{ color: 'var(--danger)' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={institution.name || ''}
+                    onChange={(e) => setInstitution({ ...institution, name: e.target.value })}
+                    required
+                    className="input-field"
+                    placeholder="Contoh: DINAS KOMUNIKASI DAN INFORMATIKA / PT DIGITAL INOVASI"
+                  />
+                </div>
+
+                {/* Tingkat 3: Sub-Unit / Divisi / Bagian */}
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">
+                    Unit Kerja / Bidang / Divisi / Jurusan <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={institution.subUnit || ''}
+                    onChange={(e) => setInstitution({ ...institution, subUnit: e.target.value })}
+                    className="input-field"
+                    placeholder="Contoh: SEKRETARIAT & TATA USAHA / DIVISI HUMAN RESOURCE"
+                  />
+                </div>
+
+                {/* Tagline / Slogan */}
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">
+                    Tagline / Motto / Slogan <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={institution.tagline || ''}
+                    onChange={(e) => setInstitution({ ...institution, tagline: e.target.value })}
+                    className="input-field"
+                    placeholder="Contoh: Mewujudkan Layanan Berbasis Elektronik yang Cepat dan Akurat"
+                  />
+                </div>
+
+                {/* Alamat & Kota */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Alamat Lengkap Kantor</label>
+                    <input
+                      type="text"
+                      value={institution.address || ''}
+                      onChange={(e) => setInstitution({ ...institution, address: e.target.value })}
+                      className="input-field"
+                      placeholder="Contoh: Jl. Merdeka No. 45, Kompleks Perkantoran"
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Kota / Kabupaten & Kode Pos</label>
+                    <input
+                      type="text"
+                      value={institution.city || ''}
+                      onChange={(e) => setInstitution({ ...institution, city: e.target.value })}
+                      className="input-field"
+                      placeholder="Contoh: Kab. Bogor, Jawa Barat 16911"
+                    />
+                  </div>
+                </div>
+
+                {/* Kontak: Telepon & Email */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Nomor Telepon / WhatsApp</label>
+                    <input
+                      type="text"
+                      value={institution.phone || ''}
+                      onChange={(e) => setInstitution({ ...institution, phone: e.target.value })}
+                      className="input-field"
+                      placeholder="(021) 555-0199 / 0812-xxxx"
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Email Resmi Korespondensi</label>
+                    <input
+                      type="email"
+                      value={institution.email || ''}
+                      onChange={(e) => setInstitution({ ...institution, email: e.target.value })}
+                      className="input-field"
+                      placeholder="sekretariat@organisasi.id"
+                    />
+                  </div>
+                </div>
+
+                {/* Website & Kode Penomoran Surat */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Website Resmi / Portal</label>
+                    <input
+                      type="text"
+                      value={institution.website || ''}
+                      onChange={(e) => setInstitution({ ...institution, website: e.target.value })}
+                      className="input-field"
+                      placeholder="https://organisasi.id"
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Kode Singkat Surat (Default Format)</label>
+                    <input
+                      type="text"
+                      value={institution.defaultLetterCode || ''}
+                      onChange={(e) => setInstitution({ ...institution, defaultLetterCode: e.target.value })}
+                      className="input-field"
+                      placeholder="Contoh: DISKOMINFO / DIK-CORP / ORG"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '0.5rem' }}>
+                  <button type="submit" disabled={instLoading} className="btn btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
+                    <i className="fa-solid fa-floppy-disk" /> Simpan Identitas Organisasi
+                  </button>
+                </div>
+              </form>
             </div>
 
-            <form onSubmit={handleSaveInstitution} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '700px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Nama Instansi / Lembaga</label>
-                <input
-                  type="text"
-                  value={institution.name}
-                  onChange={(e) => setInstitution({ ...institution, name: e.target.value })}
-                  required
-                  className="input-field"
-                  placeholder="Contoh: Dinas Komunikasi dan Informatika"
-                />
+            {/* Live Interactive Kop Surat Preview */}
+            <div className="glass-card animate-fade-in" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>
+                    <i className="fa-solid fa-eye" style={{ color: 'var(--accent-orange)' }} /> Live Preview Kop Surat Resmi
+                  </h4>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Standar Dokumen Persuratan</span>
+                </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0.25rem 0 0' }}>
+                  Tampilan di bawah ini adalah representasi kop surat resmi saat dicetak pada lembar disposisi, surat keluar, atau rekapitulasi arsip.
+                </p>
               </div>
 
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Alamat Kantor</label>
-                <textarea
-                  rows={2}
-                  value={institution.address}
-                  onChange={(e) => setInstitution({ ...institution, address: e.target.value })}
-                  className="input-field"
-                  placeholder="Alamat lengkap instansi, kota, dan kode pos"
-                />
-              </div>
+              {/* Kertas Kop Surat Preview Sheet */}
+              <div
+                style={{
+                  background: '#ffffff',
+                  color: '#111827',
+                  padding: '1.75rem 1.5rem',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                  border: '1px solid #e2e8f0',
+                  fontFamily: 'serif, "Times New Roman", Arial',
+                }}
+              >
+                {/* Header Kop */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '0.75rem' }}>
+                  {/* Logo Ikon */}
+                  <div
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '50%',
+                      background: '#f1f5f9',
+                      border: '2px solid #0f172a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.6rem',
+                      color: '#0f172a',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <i className={`fa-solid ${institution.logoIcon || 'fa-building-columns'}`} />
+                  </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Nomor Telepon / Fax</label>
-                  <input
-                    type="text"
-                    value={institution.phone}
-                    onChange={(e) => setInstitution({ ...institution, phone: e.target.value })}
-                    className="input-field"
-                    placeholder="(021) 555-0199"
-                  />
+                  {/* Header Texts */}
+                  <div style={{ flex: 1, textAlign: 'center' }}>
+                    {institution.parentName && (
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: '#334155' }}>
+                        {institution.parentName}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '1.15rem', fontWeight: 900, letterSpacing: '1px', textTransform: 'uppercase', color: '#0f172a', margin: '2px 0' }}>
+                      {institution.name || 'NAMA UTAMA INSTANSI / ORGANISASI'}
+                    </div>
+                    {institution.subUnit && (
+                      <div style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', color: '#475569' }}>
+                        {institution.subUnit}
+                      </div>
+                    )}
+                    {institution.tagline && (
+                      <div style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#64748b', marginTop: '2px' }}>
+                        "{institution.tagline}"
+                      </div>
+                    )}
+                    <div style={{ fontSize: '0.72rem', color: '#334155', marginTop: '4px', lineHeight: 1.4 }}>
+                      <span>{institution.address || 'Alamat Lengkap Instansi'}</span>
+                      {institution.city && <span>, {institution.city}</span>}
+                      {institution.phone && <span> | Telp: {institution.phone}</span>}
+                      {institution.email && <span> | Email: {institution.email}</span>}
+                      {institution.website && <span> | Web: {institution.website}</span>}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Email Resmi Dinas</label>
-                  <input
-                    type="email"
-                    value={institution.email}
-                    onChange={(e) => setInstitution({ ...institution, email: e.target.value })}
-                    className="input-field"
-                    placeholder="sekretariat@instansi.go.id"
-                  />
+                {/* Garis Pembatas Kop Resmi (Double Line: 3px solid + 1px solid) */}
+                <div style={{ borderTop: '3px solid #0f172a', borderBottom: '1px solid #0f172a', height: '4px', marginBottom: '1.25rem' }} />
+
+                {/* Dummy Body Surat */}
+                <div style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.6, padding: '0 0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <div>
+                      <div><strong>Nomor:</strong> 001/{institution.defaultLetterCode || 'KODE'}/III/{new Date().getFullYear()}</div>
+                      <div><strong>Sifat:</strong> Penting / Segera</div>
+                      <div><strong>Lampiran:</strong> 1 (Satu) Berkas</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div>{institution.city?.split(',')[0] || 'Tempat'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ margin: '1rem 0 0.5rem' }}>
+                    <div><strong>Perihal:</strong> <span style={{ textDecoration: 'underline' }}>Pemberitahuan Korespondensi & Tata Naskah Dinas</span></div>
+                  </div>
+
+                  <p style={{ margin: '0.5rem 0', textAlign: 'justify' }}>
+                    Dengan ini disampaikan bahwa seluruh dokumen surat masuk, surat keluar, lembar disposisi, dan rekapitulasi arsip digital telah terintegrasi secara otomatis dengan format identitas organisasi di atas.
+                  </p>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Website Resmi</label>
-                  <input
-                    type="text"
-                    value={institution.website}
-                    onChange={(e) => setInstitution({ ...institution, website: e.target.value })}
-                    className="input-field"
-                    placeholder="https://instansi.go.id"
-                  />
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Kode Instansi Default Penomoran</label>
-                  <input
-                    type="text"
-                    value={institution.defaultLetterCode}
-                    onChange={(e) => setInstitution({ ...institution, defaultLetterCode: e.target.value })}
-                    className="input-field"
-                    placeholder="DISKOMINFO"
-                  />
+              {/* Info Format Nomor Surat */}
+              <div style={{ padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(30, 58, 138, 0.04)', border: '1px solid var(--border-light)', fontSize: '0.8rem' }}>
+                <strong style={{ color: 'var(--primary)' }}>Pola Penomoran Otomatis:</strong>
+                <div style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-main)', marginTop: '4px' }}>
+                  [URUT] / {institution.defaultLetterCode || 'KODE'} / [BULAN_ROMAWI] / [TAHUN]
                 </div>
               </div>
-
-              <div style={{ marginTop: '0.5rem' }}>
-                <button type="submit" disabled={instLoading} className="btn btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
-                  <i className="fa-solid fa-floppy-disk" /> Simpan Identitas Instansi
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         )}
 

@@ -95,14 +95,52 @@ export default function ArsipList() {
     });
   };
 
+  const [institution, setInstitution] = useState(null);
+
+  useEffect(() => {
+    const storedInst = localStorage.getItem('app_institution_settings');
+    if (storedInst) {
+      try {
+        setInstitution(JSON.parse(storedInst));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
   return (
     <Layout title="Arsip Digital & Rekapitulasi Laporan">
-      {/* Printable Header */}
-      <div className="print-only" style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #000', paddingBottom: '10px' }}>
-        <h2 style={{ margin: 0, fontSize: '16pt' }}>REKAPITULASI ARSIP DIGITAL SURAT MASUK & KELUAR</h2>
-        <p style={{ margin: '4px 0 0 0', fontSize: '10pt', color: '#555' }}>
-          Dicetak pada: {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+      {/* Printable Official Kop Header */}
+      <div className="print-only" style={{ marginBottom: '20px', fontFamily: 'serif, "Times New Roman", Arial' }}>
+        {institution && (
+          <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+            {institution.parentName && (
+              <div style={{ fontSize: '12pt', fontWeight: 700, textTransform: 'uppercase', color: '#111' }}>
+                {institution.parentName}
+              </div>
+            )}
+            <div style={{ fontSize: '15pt', fontWeight: 900, textTransform: 'uppercase', color: '#000', margin: '2px 0' }}>
+              {institution.name}
+            </div>
+            {institution.subUnit && (
+              <div style={{ fontSize: '11pt', fontWeight: 700, textTransform: 'uppercase', color: '#222' }}>
+                {institution.subUnit}
+              </div>
+            )}
+            <div style={{ fontSize: '9pt', color: '#333', marginTop: '4px' }}>
+              {institution.address} {institution.city && `| ${institution.city}`} {institution.phone && `| Telp: ${institution.phone}`} {institution.email && `| Email: ${institution.email}`}
+            </div>
+            {/* Double underline kop surat */}
+            <div style={{ borderTop: '3px solid #000', borderBottom: '1px solid #000', height: '4px', margin: '10px 0 15px 0' }} />
+          </div>
+        )}
+
+        <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+          <h2 style={{ margin: 0, fontSize: '14pt', textDecoration: 'underline' }}>REKAPITULASI LAPORAN ARSIP PERSURATAN</h2>
+          <p style={{ margin: '4px 0 0 0', fontSize: '9pt', color: '#555' }}>
+            Dicetak pada: {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
       </div>
 
       {/* Stats Cards */}
