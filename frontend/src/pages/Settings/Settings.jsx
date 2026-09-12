@@ -242,49 +242,32 @@ export default function Settings() {
   };
 
   const tabs = [
-    { id: 'profile', label: 'Profil Akun', icon: 'fa-user' },
-    { id: 'security', label: 'Keamanan & Sandi', icon: 'fa-shield-halved' },
-    { id: 'institution', label: 'Identitas Instansi / Organisasi', icon: 'fa-building-columns' },
-    { id: 'preferences', label: 'Preferensi & Sistem', icon: 'fa-sliders' },
+    { id: 'profile', label: 'Profil Akun', shortLabel: 'Profil', icon: 'fa-user' },
+    { id: 'security', label: 'Keamanan & Sandi', shortLabel: 'Keamanan', icon: 'fa-shield-halved' },
+    { id: 'institution', label: 'Identitas Instansi', shortLabel: 'Identitas', icon: 'fa-building-columns' },
+    { id: 'preferences', label: 'Preferensi & Sistem', shortLabel: 'Preferensi', icon: 'fa-sliders' },
   ];
 
   return (
     <Layout title="Pengaturan & Preferensi">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {/* Navigation Tabs Bar */}
-        <div
-          className="glass-card"
-          style={{
-            padding: '0.5rem',
-            display: 'flex',
-            gap: '0.5rem',
-            overflowX: 'auto',
-            borderRadius: 'var(--radius-lg)',
-          }}
-        >
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`btn ${activeTab === tab.id ? 'btn-primary' : 'btn-ghost'}`}
-              style={{
-                flex: 1,
-                minWidth: '160px',
-                padding: '0.75rem 1rem',
-                fontSize: '0.875rem',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                fontWeight: activeTab === tab.id ? 700 : 500,
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <i className={`fa-solid ${tab.icon}`} />
-              <span>{tab.label}</span>
-            </button>
-          ))}
+        {/* Navigation Tabs Bar (Responsive) */}
+        <div className="settings-tabs-container">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`settings-tab-btn ${isActive ? 'active' : ''}`}
+                aria-selected={isActive}
+              >
+                <i className={`fa-solid ${tab.icon}`} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Tab 1: Profil Akun */}
@@ -487,38 +470,38 @@ export default function Settings() {
                   <i className="fa-solid fa-wand-magic-sparkles" style={{ color: 'var(--accent-orange)' }} />
                   Gunakan Contoh Template Cepat:
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                <div className="settings-preset-grid">
                   <button
                     type="button"
                     onClick={() => applyPreset('pemerintah')}
                     className="btn btn-ghost"
-                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem', background: '#fff' }}
+                    style={{ fontSize: '0.75rem', padding: '0.5rem 0.75rem', background: '#fff', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                   >
-                    <i className="fa-solid fa-landmark" style={{ color: '#1d4ed8' }} /> Pemerintahan / Dinas
+                    <i className="fa-solid fa-landmark" style={{ color: '#1d4ed8' }} /> Pemerintahan
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPreset('perusahaan')}
                     className="btn btn-ghost"
-                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem', background: '#fff' }}
+                    style={{ fontSize: '0.75rem', padding: '0.5rem 0.75rem', background: '#fff', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                   >
-                    <i className="fa-solid fa-briefcase" style={{ color: '#ea580c' }} /> Perusahaan / PT / Swasta
+                    <i className="fa-solid fa-briefcase" style={{ color: '#ea580c' }} /> Perusahaan / PT
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPreset('pendidikan')}
                     className="btn btn-ghost"
-                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem', background: '#fff' }}
+                    style={{ fontSize: '0.75rem', padding: '0.5rem 0.75rem', background: '#fff', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                   >
-                    <i className="fa-solid fa-graduation-cap" style={{ color: '#059669' }} /> Sekolah / Universitas
+                    <i className="fa-solid fa-graduation-cap" style={{ color: '#059669' }} /> Sekolah / Kampus
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPreset('yayasan')}
                     className="btn btn-ghost"
-                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem', background: '#fff' }}
+                    style={{ fontSize: '0.75rem', padding: '0.5rem 0.75rem', background: '#fff', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                   >
-                    <i className="fa-solid fa-hand-holding-heart" style={{ color: '#e11d48' }} /> Yayasan / LSM / Ormas
+                    <i className="fa-solid fa-hand-holding-heart" style={{ color: '#e11d48' }} /> Yayasan / Ormas
                   </button>
                 </div>
               </div>

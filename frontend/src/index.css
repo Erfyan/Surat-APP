@@ -1412,3 +1412,102 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
 }
 
+/* ======== Settings Navigation Tabs Responsive Layout ======== */
+.settings-tabs-container {
+  padding: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.settings-tab-btn.active {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25);
+}
+
+.settings-tab-btn:not(.active) {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
+}
+
+.settings-tab-btn:not(.active):hover {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* Tablet / Medium Screens */
+@media (max-width: 900px) {
+  .settings-tabs-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .settings-tab-btn {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.825rem;
+  }
+}
+
+/* Mobile Screens */
+@media (max-width: 600px) {
+  .settings-tabs-container {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0.4rem;
+    gap: 0.4rem;
+  }
+  .settings-tab-btn {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.775rem;
+    gap: 0.35rem;
+    flex-direction: column;
+    text-align: center;
+  }
+  .settings-tab-btn i {
+    font-size: 1.15rem;
+    margin-bottom: 2px;
+  }
+}
+
+/* Preset Template Buttons Responsive */
+.settings-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .settings-preset-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+  .settings-preset-grid .btn {
+    padding: 0.5rem 0.4rem !important;
+    font-size: 0.72rem !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+  }
+}
+
