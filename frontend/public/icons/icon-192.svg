@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="192" height="192">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="envelopeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e0e7ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  
+  <!-- Rounded App Tile -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  
+  <!-- Decorative Glow Circle -->
+  <circle cx="256" cy="256" r="180" fill="#ffffff" opacity="0.08"/>
+  
+  <!-- Envelope Icon -->
+  <g filter="url(#shadow)">
+    <!-- Envelope Body -->
+    <rect x="96" y="144" width="320" height="224" rx="24" fill="url(#envelopeGrad)"/>
+    <!-- Envelope Flap / Lines -->
+    <path d="M 104 152 L 244 260 C 251 265 261 265 268 260 L 408 152" stroke="#4f46e5" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Stamp Badge -->
+    <circle cx="360" cy="310" r="28" fill="#10b981"/>
+    <path d="M 348 310 L 356 318 L 372 302" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+</svg>

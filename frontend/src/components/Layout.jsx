@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
+import InstallPwaPrompt from './InstallPwaPrompt';
 
 /**
  * Layout utama dengan sidebar navigasi (desktop only), glassmorphism header,
@@ -139,6 +140,9 @@ export default function Layout({ children, title }) {
           </NavLink>
         ))}
       </nav>
+
+      {/* PWA Install Prompt Banner */}
+      <InstallPwaPrompt />
     </div>
   );
 }
