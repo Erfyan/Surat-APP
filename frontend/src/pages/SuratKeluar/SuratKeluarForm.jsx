@@ -91,6 +91,30 @@ export default function SuratKeluarForm() {
     }
   };
 
+  const handleGenerateNomorSurat = () => {
+    const storedInst = localStorage.getItem('app_institution_settings');
+    let letterCode = 'SK';
+    if (storedInst) {
+      try {
+        const parsed = JSON.parse(storedInst);
+        if (parsed.defaultLetterCode && parsed.defaultLetterCode.trim()) {
+          letterCode = parsed.defaultLetterCode.trim();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    const targetDate = form.tanggal_surat ? new Date(form.tanggal_surat) : new Date();
+    const monthRoman = romanMonths[targetDate.getMonth()] || 'I';
+    const year = targetDate.getFullYear();
+    const randomSeq = String(Math.floor(Math.random() * 899) + 101);
+    const generated = `${randomSeq}/${letterCode}/${monthRoman}/${year}`;
+
+    setForm((prev) => ({ ...prev, nomor_surat: generated }));
+  };
+
   const title = isEdit ? 'Edit Surat Keluar' : 'Buat Surat Keluar Baru';
 
   if (fetching) {
@@ -125,7 +149,20 @@ export default function SuratKeluarForm() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
             {/* Nomor Surat */}
             <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Nomor Surat (Opsional)</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <label className="form-label" style={{ margin: 0 }}>Nomor Surat (Opsional)</label>
+                {!isEdit && (
+                  <button
+                    type="button"
+                    onClick={handleGenerateNomorSurat}
+                    className="btn btn-ghost btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', color: 'var(--primary)', height: 'auto' }}
+                    title="Buat nomor otomatis berdasarkan format instansi"
+                  >
+                    <i className="fa-solid fa-wand-magic-sparkles" style={{ color: 'var(--accent-orange)' }} /> Buat Otomatis
+                  </button>
+                )}
+              </div>
               <input
                 name="nomor_surat"
                 value={form.nomor_surat}

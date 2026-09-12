@@ -4,6 +4,7 @@ import Layout from '../../components/Layout';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import ConfirmModal from '../../components/ConfirmModal';
 import EmptyState from '../../components/EmptyState';
+import DisposisiPrintModal from '../../components/DisposisiPrintModal';
 import { useToast } from '../../context/ToastContext';
 import { getDisposisi, updateDisposisi, deleteDisposisi } from '../../services/api';
 
@@ -15,6 +16,7 @@ export default function DisposisiList() {
   const [error, setError] = useState('');
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, perihal: '' });
   const [deleting, setDeleting] = useState(false);
+  const [selectedDisposisiPrint, setSelectedDisposisiPrint] = useState(null);
   const navigate = useNavigate();
   const { addToast } = useToast();
 
@@ -232,6 +234,15 @@ export default function DisposisiList() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedDisposisiPrint(item)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ color: 'var(--primary)', borderColor: 'var(--primary-light)' }}
+                          title="Cetak Lembar Disposisi"
+                        >
+                          <i className="fa-solid fa-print" /> Cetak
+                        </button>
                         <Link to={`/disposisi/${item.id}/edit`} className="btn btn-secondary btn-sm" style={{ color: 'var(--warning)', borderColor: 'var(--warning-border)' }}>
                           <i className="fa-solid fa-pen-to-square" /> Edit
                         </Link>
@@ -250,6 +261,13 @@ export default function DisposisiList() {
           </div>
         )}
       </div>
+
+      {/* Printable Disposisi Modal Sheet */}
+      <DisposisiPrintModal
+        isOpen={Boolean(selectedDisposisiPrint)}
+        onClose={() => setSelectedDisposisiPrint(null)}
+        disposisi={selectedDisposisiPrint}
+      />
 
       {/* Confirm Delete Modal */}
       <ConfirmModal

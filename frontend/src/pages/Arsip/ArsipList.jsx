@@ -108,6 +108,36 @@ export default function ArsipList() {
     }
   }, []);
 
+  const handleExportCSV = () => {
+    if (!arsip || arsip.length === 0) {
+      addToast('Tidak ada data arsip untuk diekspor', 'warning');
+      return;
+    }
+
+    const headers = ['No', 'Jenis Dokumen', 'Nomor Surat', 'Perihal', 'Pengirim / Asal', 'Tujuan', 'Tanggal Surat', 'Status'];
+    const rows = arsip.map((item, index) => [
+      index + 1,
+      item.tipe === 'surat_masuk' ? 'Surat Masuk' : 'Surat Keluar',
+      `"${(item.nomor_surat || '-').replace(/"/g, '""')}"`,
+      `"${(item.perihal || '-').replace(/"/g, '""')}"`,
+      `"${(item.pengirim || '-').replace(/"/g, '""')}"`,
+      `"${(item.tujuan || '-').replace(/"/g, '""')}"`,
+      item.tanggal_surat ? item.tanggal_surat.split('T')[0] : '-',
+      item.status || 'Disetujui',
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Rekapitulasi_Arsip_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    addToast('Laporan arsip Excel/CSV berhasil diunduh!', 'success');
+  };
+
   return (
     <Layout title="Arsip Digital & Rekapitulasi Laporan">
       {/* Printable Official Kop Header */}
@@ -265,12 +295,21 @@ export default function ArsipList() {
             </select>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button type="submit" className="btn btn-primary">
               <i className="fa-solid fa-magnifying-glass" /> Cari
             </button>
             <button type="button" onClick={handleResetFilter} className="btn btn-secondary">
               <i className="fa-solid fa-rotate-left" /> Reset
+            </button>
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              className="btn btn-ghost"
+              style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }}
+              title="Unduh format file Excel (.csv)"
+            >
+              <i className="fa-solid fa-file-excel" /> Ekspor Excel
             </button>
             <button type="button" onClick={handlePrint} className="btn btn-success">
               <i className="fa-solid fa-print" /> Cetak / PDF

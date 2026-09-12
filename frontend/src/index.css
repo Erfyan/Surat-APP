@@ -1497,17 +1497,56 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.5rem;
 }
 
-@media (max-width: 600px) {
-  .settings-preset-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.4rem;
+/* ======== Print Styles for Official Documents & Disposisi Sheet ======== */
+@media print {
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10.5pt;
   }
-  .settings-preset-grid .btn {
-    padding: 0.5rem 0.4rem !important;
-    font-size: 0.72rem !important;
-    white-space: normal !important;
-    text-align: center !important;
-    line-height: 1.2 !important;
+
+  .no-print,
+  .sidebar,
+  .top-header,
+  .mobile-bottom-nav,
+  .btn,
+  .stats-grid,
+  .modal-overlay .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .content-body {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    inset: auto !important;
+  }
+
+  #disposisi-print-sheet {
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 }
+
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
+
 
