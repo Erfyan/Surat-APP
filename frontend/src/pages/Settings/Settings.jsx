@@ -220,6 +220,7 @@ export default function Settings() {
       localStorage.setItem('app_institution_settings', JSON.stringify(institution));
       addToast('Identitas instansi/organisasi berhasil disimpan!', 'success');
     } catch (err) {
+      console.error('[INSTITUTION_SETTINGS_ERROR]:', err);
       addToast('Gagal menyimpan identitas instansi', 'error');
     } finally {
       setInstLoading(false);

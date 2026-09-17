@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -20,7 +20,7 @@ export default function DisposisiList() {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -33,11 +33,11 @@ export default function DisposisiList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const openDeleteModal = (id, perihal) => {
     setDeleteModal({ isOpen: true, id, perihal: perihal || 'surat ini' });

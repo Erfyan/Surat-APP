@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Surat App</string>
+    <string name="title_activity_main">Surat App</string>
+    <string name="package_name">com.suratapp.app</string>
+    <string name="custom_url_scheme">com.suratapp.app</string>
+</resources>

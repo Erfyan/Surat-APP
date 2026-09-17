@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -26,7 +26,7 @@ export default function ArsipList() {
   const [endDate, setEndDate] = useState('');
   const [status, setStatus] = useState('all');
 
-  const fetchArsipData = async () => {
+  const fetchArsipData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -58,11 +58,11 @@ export default function ArsipList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, type, startDate, endDate, status, addToast]);
 
   useEffect(() => {
     fetchArsipData();
-  }, [type, status, startDate, endDate]);
+  }, [fetchArsipData]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();

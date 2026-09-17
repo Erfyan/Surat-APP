@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import InstallPwaPrompt from './InstallPwaPrompt';
 

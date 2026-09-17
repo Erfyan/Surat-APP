@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -18,7 +18,7 @@ export default function SuratKeluarList() {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -31,11 +31,11 @@ export default function SuratKeluarList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const openDeleteModal = (id, nomor) => {
     setDeleteModal({ isOpen: true, id, nomor: nomor || 'Draft' });

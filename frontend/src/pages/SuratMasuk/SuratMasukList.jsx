@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -19,7 +19,7 @@ export default function SuratMasukList() {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -32,11 +32,11 @@ export default function SuratMasukList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, startDate, endDate, addToast]);
 
   useEffect(() => {
     fetchData();
-  }, [startDate, endDate]);
+  }, [fetchData]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
