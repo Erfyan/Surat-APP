@@ -80,7 +80,7 @@ app.use('/api/surat-keluar', suratKeluarRoutes);
 app.use('/api/arsip', arsipRoutes);
 
 // 7. Root / Health-check Endpoint
-app.get('/', (req, res) => {
+app.get(['/', '/api'], (req, res) => {
   res.status(200).json({
     success: true,
     message: 'API Surat App is running',
@@ -128,8 +128,8 @@ app.use((err, req, res, next) => {
 
 // Jalankan Server hanya jika dijalankan langsung (bukan saat diimport oleh test suite)
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running securely on port ${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running securely on port ${PORT} (0.0.0.0)`);
   });
 }
 
