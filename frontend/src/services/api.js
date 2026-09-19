@@ -3,7 +3,7 @@
  * Mengelola otentikasi JWT token, auto-refresh token, dan penanganan respons/error standar.
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://surat-app-kp6c.vercel.app';
 
 const getHeaders = () => {
   const token = localStorage.getItem('access_token');
